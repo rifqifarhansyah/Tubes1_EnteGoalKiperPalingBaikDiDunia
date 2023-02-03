@@ -137,8 +137,8 @@ Room for Improvement:
 
 ## Acknowledgements
 - Thanks To Allah SWT
-- This project was inspired by [24-Game-Solver](
-https://informatika.stei.itb.ac.id/~rinaldi.munir/Stmik/2015-2016/Makalah-2016/MakalahStima-2016-038.pdf)
+- This project was inspired by this [article](
+https://bit.ly/SpekTubes1Stima)
 
 <a name="contact"></a>
 
