@@ -30,7 +30,7 @@ A simple Galaxio Bot with Greedy Algorithm. A greedy algorithm is a method for s
 | Nama                        | NIM      | E-Mail                      |
 | --------------------------- | -------- | --------------------------- |
 | Saddam Annais Shaquile      | 13521121 | 13521121@std.stei.itb.ac.id |
-| M. Sakti Widyaatmaja        | 13521160 | 13521160@std.stei.itb.ac.id |
+| M. Dimas Sakti Widyatmaja   | 13521160 | 13521160@std.stei.itb.ac.id |
 | Mohammad Rifqi Farhansyah   | 13521166 | 13521166@std.stei.itb.ac.id |
 
 <a name="features"></a>
