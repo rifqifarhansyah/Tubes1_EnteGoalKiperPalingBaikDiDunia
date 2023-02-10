@@ -4,3 +4,4 @@ reference-bot-publish
 runner-publish
 runner
 visualiser
+**/target/*

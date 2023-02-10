@@ -48,7 +48,7 @@ public class BotService {
 
     
         }
-        
+
         this.playerAction = playerAction;
     }
 
@@ -78,7 +78,7 @@ public class BotService {
         return (direction + 360) % 360;
     }
 
-    private static int toDegrees(double v) {
+    public static int toDegrees(double v) {
         return (int) (v * (180 / Math.PI));
     }
 
