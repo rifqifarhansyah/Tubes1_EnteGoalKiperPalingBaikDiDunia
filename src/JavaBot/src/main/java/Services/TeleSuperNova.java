@@ -54,31 +54,13 @@ public class TeleSuperNova {
       return playerAction.heading;
     }
 
-    public int teleportBertahan(PlayerAction playerAction) {
-      // Punya return value yang menandakan heading teleporter dan bahwa telah menembakkan teleporter
-      playerAction.action = PlayerActions.FIRETELEPORT;
-      
-      if (!gameState.getGameObjects().isEmpty()) {
-        // Kalau belum pakai radar
-        var playerList = gameState.getGameObjects()
-                .stream().filter(item -> item.getGameObjectType() == ObjectTypes.PLAYER)
-                .sorted(Comparator
-                        .comparing(item -> getDistanceBetween(bot, item)))
-                .collect(Collectors.toList());
-
-        // Pakai index 1 untuk cari pemain lain lain terdekat
-        playerAction.heading = (getHeadingBetween(playerList.get(1)) + 90) % 360; // Sementara
-      }
-
-      return playerAction.heading+2160;
-    }
-    
-
     public int checkTeleportSerang (PlayerAction playerAction, int headingTele) {
       var teleporterList = gameState.getGameObjects()
         .stream().filter(item -> item.getGameObjectType() == ObjectTypes.TELEPORTER && 
-          item.getCurrentHeading() == headingTele) // Sementara bandingin heading teleporter
-        .collect(Collectors.toList());
+          item.getCurrentHeading() == headingTele) // Untuk mengetahui apakah teleporter punya kita atau bukan, karena heading kemungkinan besar unik
+          .sorted(Comparator
+            .comparing(item -> getDistanceBetween(bot, item)))
+          .collect(Collectors.toList());
 
       var enemyList = gameState.getGameObjects()
         .stream().filter(item -> item.getGameObjectType() == ObjectTypes.PLAYER)
@@ -102,10 +84,29 @@ public class TeleSuperNova {
       }
     }
 
+    public int teleportBertahan(PlayerAction playerAction) {
+      // Punya return value yang menandakan heading teleporter dan bahwa telah menembakkan teleporter
+      playerAction.action = PlayerActions.FIRETELEPORT;
+      
+      if (!gameState.getGameObjects().isEmpty()) {
+        // Kalau belum pakai radar
+        var playerList = gameState.getGameObjects()
+                .stream().filter(item -> item.getGameObjectType() == ObjectTypes.PLAYER)
+                .sorted(Comparator
+                        .comparing(item -> getDistanceBetween(bot, item)))
+                .collect(Collectors.toList());
+
+        // Pakai index 1 untuk cari pemain lain lain terdekat
+        playerAction.heading = (getHeadingBetween(playerList.get(1)) + 90) % 360; // Sementara
+      }
+
+      return playerAction.heading+2160;
+    }
+    
     public int checkTeleportBertahan (PlayerAction playerAction, int headingTele) {
       var teleporterList = gameState.getGameObjects()
         .stream().filter(item -> item.getGameObjectType() == ObjectTypes.TELEPORTER && 
-          item.getCurrentHeading() == headingTele) // Sementara bandingin heading teleporter
+          item.getCurrentHeading() == headingTele) // Untuk mengetahui apakah teleporter punya kita atau bukan, karena heading kemungkinan besar unik
         .sorted(Comparator
                 .comparing(item -> getDistanceBetween(bot, item)))
         .collect(Collectors.toList());
@@ -133,8 +134,50 @@ public class TeleSuperNova {
 
     public int tembakSuperNova(PlayerAction playerAction) {
       // Punya return value yang menandakan bahwa telah menembakkan supernova
+      playerAction.action = PlayerActions.FIRETELEPORT;
+      
+      if (!gameState.getGameObjects().isEmpty()) {
+        // Kalau belum pakai radar
+        var playerList = gameState.getGameObjects()
+                .stream().filter(item -> item.getGameObjectType() == ObjectTypes.PLAYER)
+                .sorted(Comparator
+                        .comparing(item -> getDistanceBetween(bot, item)))
+                .collect(Collectors.toList());
 
-      return 1;
+        playerAction.heading = getHeadingBetween(playerList.get(1));
+      }
+
+      return playerAction.heading;
+    }
+
+    public int checkDetonateSuperNova (PlayerAction playerAction, int headingSupernova) {
+      var supernovaList = gameState.getGameObjects()
+        .stream().filter(item -> item.getGameObjectType() == ObjectTypes.SUPERNOVA_BOMB && 
+          item.getCurrentHeading() == headingSupernova)        // Untuk mengetahui apakah supernova punya kita atau bukan, karena heading kemungkinan besar unik        
+          .sorted(Comparator
+            .comparing(item -> getDistanceBetween(bot, item))) 
+        .collect(Collectors.toList());
+
+      var enemyList = gameState.getGameObjects()
+        .stream().filter(item -> item.getGameObjectType() == ObjectTypes.PLAYER)
+        .sorted(Comparator
+              .comparing(item -> getDistanceBetween(supernovaList.get(0), item)))
+        .collect(Collectors.toList());
+
+
+      if (!supernovaList.isEmpty()) { // Jika supernova masih ada dalam permainan
+        var supernovaDistance = getDistanceBetween(supernovaList.get(0), enemyList.get(1));       
+        if (supernovaDistance <= bot.getSize() + 50) { // Jika radius tambah 50 kurang dari jarak supernova ke musuh terdekat
+          playerAction.action = PlayerActions.DETONATESUPERNOVA;
+          return -1;
+        } 
+
+        // Return heading awal, tunggu tick selanjutnya
+        // jika pada tick2 selanjutnya supernova melebihi boundary maka otomatis hilang
+        return headingSupernova; 
+      } else {
+        return -1;
+      }
     }
 
     public void computeNextPlayerAction(PlayerAction playerAction) {
