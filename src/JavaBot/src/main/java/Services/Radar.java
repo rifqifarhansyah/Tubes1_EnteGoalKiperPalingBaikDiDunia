@@ -48,6 +48,32 @@ public class Radar {
         }
         return 0;
       }
+
+      private int checkObjectsNextVersion(List<GameObject> prevObjects, List<GameObject> currentObjects, GameObject bot, int returnValue, int vs) {
+        for (int i = 0; i < prevObjects.size(); i++) {
+          for (int j = 0; j < currentObjects.size(); j++) {
+            if (prevObjects.get(i).getId() == currentObjects.get(j).getId()) {
+              double deltaX = prevObjects.get(i).getPosition().x - bot.getPosition().x;
+              double deltaY = prevObjects.get(i).getPosition().y - bot.getPosition().y;
+              double prevRadians = Math.atan2(deltaY, deltaX);
+              double prevDegrees = Math.toDegrees(prevRadians);
+
+              deltaX = currentObjects.get(j).getPosition().x - bot.getPosition().x;
+              deltaY = currentObjects.get(j).getPosition().y - bot.getPosition().y;
+              double currRadians = Math.atan2(deltaY, deltaX);
+              double currDegrees = Math.toDegrees(currRadians);
+
+              int prevDistance = BotService.getDistanceBetween(prevObjects.get(i), bot);
+              int currDistance = BotService.getDistanceBetween(currentObjects.get(j), bot);
+              int vm = (prevDistance - currDistance);
+              if (vm > vs * Math.cos(prevRadians-currRadians)) {
+                return returnValue;
+              }
+            }
+          }
+        }
+        return 0;
+      }
       
       if(prevState != null){
         var prevSupernova = getCloseGameObjects(prevState, ObjectTypes.SUPERNOVA_BOMB, 200);
@@ -62,6 +88,9 @@ public class Radar {
         checkObjects(prevSupernova, currSupernova, bot, SUPERNOVADEFENCE);
         checkObjects(prevTele, currTele, bot, TELEPORTDEFENCE);
         checkObjects(prevTorpedo, currTorpedo, bot, TORPEDODEFENCE);
+        checkObjectsNextVersion(prevSupernova, currSupernova, bot, SUPERNOVADEFENCE, 40);
+        checkObjectsNextVersion(prevTele, currTele, bot, TELEPORTDEFENCE, 20);
+        checkObjectsNextVersion(prevTorpedo, currTorpedo, bot, TORPEDODEFENCE, 20);
       }
 
     // if (prevState != null) {
@@ -75,35 +104,35 @@ public class Radar {
     //       .filter(item -> item.getGameObjectType() == ObjectTypes.SUPERNOVA_BOMB
     //           && (BotService.getDistanceBetween(bot, item) < 200))
     //       .collect(Collectors.toList());
-      for (int i = 0; i < prevSupernova.size(); i++) {
-        for (int j = 0; j < currSupernova.size(); j++) {
-          if (prevSupernova.get(i).getId() == currSupernova.get(j).getId()) {
-            if ((prevSupernova.get(i).getPosition().x - bot.getPosition().x) != 0) {
-              var prevGradien = BotService
-                  .toDegrees(Math.atan2(prevSupernova.get(i).getPosition().y - bot.getPosition().y,
-                      prevSupernova.get(i).getPosition().x - bot.getPosition().x));
-              var curGradien = BotService
-                  .toDegrees(Math.atan2(currSupernova.get(j).getPosition().y - bot.getPosition().y,
-                      currSupernova.get(j).getPosition().x - bot.getPosition().x));
-              if ((prevGradien - curGradien) < 0.05 || (prevGradien - curGradien) > -0.05) {
-                return 2;
-              }
-            } else if ((prevSupernova.get(i).getPosition().y - bot.getPosition().y) != 0) {
-              var prevGradien = BotService
-                  .toDegrees(Math.atan2(prevSupernova.get(i).getPosition().x - bot.getPosition().x,
-                      prevSupernova.get(i).getPosition().y - bot.getPosition().y));
-              var curGradien = BotService
-                  .toDegrees(Math.atan2(currSupernova.get(j).getPosition().x - bot.getPosition().x,
-                      currSupernova.get(j).getPosition().y - bot.getPosition().y));
-              if ((prevGradien - curGradien) < 0.05 || (prevGradien - curGradien) > -0.05) {
-                return 2;
-              }
-            } else {
-              return 0;
-            }
-          }
-        }
-      }
+      // for (int i = 0; i < prevSupernova.size(); i++) {
+      //   for (int j = 0; j < currSupernova.size(); j++) {
+      //     if (prevSupernova.get(i).getId() == currSupernova.get(j).getId()) {
+      //       if ((prevSupernova.get(i).getPosition().x - bot.getPosition().x) != 0) {
+      //         var prevGradien = BotService
+      //             .toDegrees(Math.atan2(prevSupernova.get(i).getPosition().y - bot.getPosition().y,
+      //                 prevSupernova.get(i).getPosition().x - bot.getPosition().x));
+      //         var curGradien = BotService
+      //             .toDegrees(Math.atan2(currSupernova.get(j).getPosition().y - bot.getPosition().y,
+      //                 currSupernova.get(j).getPosition().x - bot.getPosition().x));
+      //         if ((prevGradien - curGradien) < 0.05 || (prevGradien - curGradien) > -0.05) {
+      //           return 2;
+      //         }
+      //       } else if ((prevSupernova.get(i).getPosition().y - bot.getPosition().y) != 0) {
+      //         var prevGradien = BotService
+      //             .toDegrees(Math.atan2(prevSupernova.get(i).getPosition().x - bot.getPosition().x,
+      //                 prevSupernova.get(i).getPosition().y - bot.getPosition().y));
+      //         var curGradien = BotService
+      //             .toDegrees(Math.atan2(currSupernova.get(j).getPosition().x - bot.getPosition().x,
+      //                 currSupernova.get(j).getPosition().y - bot.getPosition().y));
+      //         if ((prevGradien - curGradien) < 0.05 || (prevGradien - curGradien) > -0.05) {
+      //           return 2;
+      //         }
+      //       } else {
+      //         return 0;
+      //       }
+      //     }
+      //   }
+      // }
 
     //   var prevTele = prevState.getGameObjects()
     //       .stream()
@@ -115,33 +144,39 @@ public class Radar {
     //       .filter(item -> item.getGameObjectType() == ObjectTypes.TELEPORTER
     //           && (BotService.getDistanceBetween(bot, item) < 120))
     //       .collect(Collectors.toList());
-      for (int i = 0; i < prevTele.size(); i++) {
-        for (int j = 0; j < currentTele.size(); j++) {
-          if (prevTele.get(i).getId() == currentTele.get(j).getId()) {
-            if ((prevTele.get(i).getPosition().x - bot.getPosition().x) != 0) {
-              var prevGradien = BotService.toDegrees(Math.atan2(prevTele.get(i).getPosition().y - bot.getPosition().y,
-                  prevTele.get(i).getPosition().x - bot.getPosition().x));
-              var curGradien = BotService.toDegrees(Math.atan2(currentTele.get(j).getPosition().y - bot.getPosition().y,
-                  currentTele.get(j).getPosition().x - bot.getPosition().x));
-              if ((prevGradien - curGradien) < 0.05 || (prevGradien - curGradien) > -0.05) {
-                return 1;
-              }
-            } else if ((prevTele.get(i).getPosition().y - bot.getPosition().y) != 0) {
-              var prevGradien = BotService.toDegrees(Math.atan2(prevTele.get(i).getPosition().x - bot.getPosition().x,
-                  prevTele.get(i).getPosition().y - bot.getPosition().y));
-              var curGradien = BotService.toDegrees(Math.atan2(currentTele.get(j).getPosition().x - bot.getPosition().x,
-                  currentTele.get(j).getPosition().y - bot.getPosition().y));
-              if ((prevGradien - curGradien) < 0.05 || (prevGradien - curGradien) > -0.05) {
-                return 1;
-              }
-            } else {
-              return 0;
-            }
-          } else {
-            return 0;
-          }
-        }
-      }
+      // for (int i = 0; i < prevTele.size(); i++) {
+      //   for (int j = 0; j < currentTele.size(); j++) {
+      //     if (prevTele.get(i).getId() == currentTele.get(j).getId()) {
+      //       if ((prevTele.get(i).getPosition().x - bot.getPosition().x) != 0) {
+      //         var prevGradien = BotService.toDegrees(Math.atan2(prevTele.get(i).getPosition().y - bot.getPosition().y,
+      //             prevTele.get(i).getPosition().x - bot.getPosition().x));
+      //         var curGradien = BotService.toDegrees(Math.atan2(currentTele.get(j).getPosition().y - bot.getPosition().y,
+      //             currentTele.get(j).getPosition().x - bot.getPosition().x));
+      //         if ((prevGradien - curGradien) < 0.05 || (prevGradien - curGradien) > -0.05) {
+      //           return 1;
+      //         }
+      //       } else if ((prevTele.get(i).getPosition().y - bot.getPosition().y) != 0) {
+      //         var prevGradien = BotService.toDegrees(Math.atan2(prevTele.get(i).getPosition().x - bot.getPosition().x,
+      //             prevTele.get(i).getPosition().y - bot.getPosition().y));
+      //         var curGradien = BotService.toDegrees(Math.atan2(currentTele.get(j).getPosition().x - bot.getPosition().x,
+      //             currentTele.get(j).getPosition().y - bot.getPosition().y));
+      //         if ((prevGradien - curGradien) < 0.05 || (prevGradien - curGradien) > -0.05) {
+      //           return 1;
+      //         }
+      //       } else {
+      //         return 0;
+      //       }
+      //     } else {
+      //       return 0;
+      //     }
+      //   }
+      // }
+
+      // for(int i=0; i<prevTele.size(); i++){
+      //   for(int j=0; j<currentTele.size(); j++){
+      //     if(prev)
+      //   }
+      // }
 
     //   var prevTorpedo = prevState.getGameObjects()
     //       .stream()
