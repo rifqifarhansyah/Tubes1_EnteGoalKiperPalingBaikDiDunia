@@ -106,7 +106,7 @@ public class TeleSuperNova {
     public int checkTeleportBertahan (PlayerAction playerAction, int headingTele) {
       var teleporterList = gameState.getGameObjects()
         .stream().filter(item -> item.getGameObjectType() == ObjectTypes.TELEPORTER && 
-          item.getCurrentHeading() == headingTele) // Untuk mengetahui apakah teleporter punya kita atau bukan, karena heading kemungkinan besar unik
+          item.getCurrentHeading() == headingTele % 360) // Untuk mengetahui apakah teleporter punya kita atau bukan, karena heading kemungkinan besar unik
         .sorted(Comparator
                 .comparing(item -> getDistanceBetween(bot, item)))
         .collect(Collectors.toList());
