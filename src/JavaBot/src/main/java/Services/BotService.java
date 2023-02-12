@@ -8,11 +8,11 @@ import java.util.stream.*;
 
 public class BotService {
     private GameObject bot;
-    private PlayerAction playerAction;
+    public PlayerAction playerAction;
     private GameState gameState;
     private GameState prevState = null;
-    private Integer tick = null;
-    private Integer commandTracker = null;
+    public Integer tick = null;
+    public UUID objectTracker = null;
 
     public BotService() {
         this.playerAction = new PlayerAction();
@@ -47,6 +47,7 @@ public class BotService {
 
         if (!objectState.isEmpty() && !playerState.isEmpty() && prevState!=null && gameState.getWorld().getCurrentTick() != tick ) {
             var warning = objectRadar.checkRadar(gameState, prevState, bot);
+            System.out.println(warning);
             if (warning != null) {
                 
                 if (warning.gameObjectType == ObjectTypes.SUPERNOVA_BOMB || objectRadar.supernovaDefend) {
@@ -58,15 +59,14 @@ public class BotService {
                 } else if (warning.gameObjectType == ObjectTypes.TORPEDO_SALVO || objectRadar.torpedoDefend) {
                     // Jika muncul bahaya torpedo
 
-                } else if (warning.gameObjectType == ObjectTypes.PLAYER || objectRadar.playerDefend) {
+                } else if (warning.gameObjectType == ObjectTypes.PLAYER) {
                     // Jika muncul bahaya player
-                    System.out.println(warning.getGameObjectType());
-                    playerAction.action = PlayerActions.FORWARD;
-                    if (commandTracker != (warning.currentHeading + 90) % 360) {
-                        playerAction.heading = (warning.currentHeading + 90) % 360;    
-                        commandTracker = playerAction.heading;
-                    }
+                    // System.out.println(warning.getGameObjectType());
+                    objectTracker = GreedyCommand.run(warning,playerAction,objectTracker,bot);
                 } 
+            } else {
+                objectTracker = null;
+                playerAction.action = PlayerActions.STOP;
             }
         }
 

@@ -28,12 +28,12 @@ public class Radar {
     if (objectType == ObjectTypes.PLAYER) {
       return gameState.getPlayerGameObjects()
       .stream()
-      .filter(item -> item.getGameObjectType() == objectType && (BotService.getDistanceBetween(bot, item) < (distance + item.getSize())))
+      .filter(item -> item.getGameObjectType() == objectType && (BotService.getDistanceBetween(bot, item) < (distance + bot.getSize() + item.getSize())) )
       .collect(Collectors.toList());  
     } else {
       return gameState.getGameObjects()
       .stream()
-      .filter(item -> item.getGameObjectType() == objectType && (BotService.getDistanceBetween(bot, item) < (distance + item.getSize())))
+      .filter(item -> item.getGameObjectType() == objectType && (BotService.getDistanceBetween(bot, item) < (distance + bot.getSize() + item.getSize())))
       .collect(Collectors.toList());
     }
 
@@ -85,9 +85,10 @@ public class Radar {
 
           if (currentObjects.get(j).getGameObjectType() == ObjectTypes.PLAYER) {
             vs = 200/currentObjects.get(j).getSize();
+            // System.out.println("vm: " + vm + " |  vs:  " + vs*Math.cos(radian)+ "|  distance : "+BotService.getDistanceBetween(bot, currentObjects.get(j)) );
           }
 
-          // System.out.println("vm: " + vm + " |  vs:  " + vs*Math.cos(radian));
+         
           // System.out.println();
 
           if (vm > vs * Math.cos(radian)) {
@@ -113,17 +114,17 @@ public class Radar {
 
   public GameObject checkRadar(GameState gameState, GameState prevState, GameObject bot) {
       if(prevState != null){
-        var prevSupernova = getCloseGameObjects(prevState, bot, ObjectTypes.SUPERNOVA_BOMB, 800+bot.getSize());
-        var currSupernova = getCloseGameObjects(gameState, bot, ObjectTypes.SUPERNOVA_BOMB, 800+bot.getSize());
+        var prevSupernova = getCloseGameObjects(prevState, bot, ObjectTypes.SUPERNOVA_BOMB, 800);
+        var currSupernova = getCloseGameObjects(gameState, bot, ObjectTypes.SUPERNOVA_BOMB, 800);
 
-        var prevTele = getCloseGameObjects(prevState, bot, ObjectTypes.TELEPORTER, 200+bot.getSize());
-        var currTele = getCloseGameObjects(gameState, bot, ObjectTypes.TELEPORTER, 200+bot.getSize());
+        var prevTele = getCloseGameObjects(prevState, bot, ObjectTypes.TELEPORTER, 200);
+        var currTele = getCloseGameObjects(gameState, bot, ObjectTypes.TELEPORTER, 200);
 
-        var prevTorpedo = getCloseGameObjects(prevState, bot, ObjectTypes.TORPEDO_SALVO, 280+bot.getSize());
-        var currTorpedo = getCloseGameObjects(gameState, bot, ObjectTypes.TORPEDO_SALVO, 280+bot.getSize());
+        var prevTorpedo = getCloseGameObjects(prevState, bot, ObjectTypes.TORPEDO_SALVO, 280);
+        var currTorpedo = getCloseGameObjects(gameState, bot, ObjectTypes.TORPEDO_SALVO, 280);
 
-        var prevPlayer = getCloseGameObjects(prevState, bot, ObjectTypes.PLAYER, 200+bot.getSize());
-        var currPlayer = getCloseGameObjects(gameState, bot, ObjectTypes.PLAYER, 200+bot.getSize());
+        var prevPlayer = getCloseGameObjects(prevState, bot, ObjectTypes.PLAYER, 200);
+        var currPlayer = getCloseGameObjects(gameState, bot, ObjectTypes.PLAYER, 150);
 
         
         var danger = checkObjectsNextVersion(prevSupernova, currSupernova, bot, 40);

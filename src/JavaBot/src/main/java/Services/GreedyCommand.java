@@ -6,27 +6,35 @@ import java.util.*;
 import java.util.stream.*;
 
 public class GreedyCommand extends BotService {
-  public static PlayerActions activateAfterburner(List<GameObject> playerList, double distance, double distanceToAnotherEnemy, boolean attack) {
-    var ourShip = playerList.get(0);
-    var enemyShip = playerList.get(1);
+  public static UUID run(GameObject enemy, PlayerAction p, UUID objectTracker, GameObject bot) {
+    
+    activateAfterburner(p, bot, enemy, false);
 
+    if (objectTracker == null || !(objectTracker == null? UUID.randomUUID() : objectTracker).equals(enemy.getId()) ) {
+        p.heading = (enemy.currentHeading + 90) % 360;    
+        System.out.println(enemy.currentHeading + "   " +p.heading);
+        // System.out.println(commandTracker + "   " +  );
+    }
+
+    return enemy.getId();
+    // return p;
+  }
+
+
+  public static void activateAfterburner(PlayerAction p, GameObject bot, GameObject enemy, boolean attack ) {
     if (attack) {
-      var condition1 = ourShip.getSize() > 50;
-      var condition2 = ourShip.getSize() - (distance / 2*2*(200/ourShip.getSize())) > enemyShip.getSize();
-      var condition3 = ourShip.getSize() - (distance / 2*2*(200/ourShip.getSize())) > 35;
-      var condition4 = distanceToAnotherEnemy + enemyShip.getSize() >= 100;
-  
-      if (condition1 && condition2 && condition3 && condition4) {
-        return PlayerActions.STARTAFTERBURNER;
-      } else {
-        return PlayerActions.STOP;
-      }
+
     } else {
-      if (ourShip.getSize() > 30) {
-        return PlayerActions.STARTAFTERBURNER;
+      if (bot.getAfterburnerStatus()) {
+        p.action = PlayerActions.FORWARD;
       } else {
-        return PlayerActions.STOP;
+        if (bot.getSize() > 30 && bot.getSpeed() != 0) {
+          p.action = PlayerActions.STARTAFTERBURNER;
+        } else if (bot.getSize() < 20) {
+          p.action = PlayerActions.STOPAFTERBURNER;
+        }
       }
+
     }
   }
 
