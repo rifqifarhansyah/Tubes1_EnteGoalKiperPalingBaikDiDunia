@@ -7,7 +7,7 @@ awalnya mau kubuat void, tapi aku mikir gimana
 caranya kita mau ngedetonate teleporternya di
 tick2 berikutnya jadi aku pikir buat bikin
 atribut baru yang jadi kode yang nandain kalau 
-lagi ada teleporter yang ditembakin atau nggak, 
+lagi ada teleporter yang ditembakin atau nggak,
 jadi sekarang fungsinya ngereturn int.
 Nah, awalnya kodenya cuman angka2 biasa,
 disimpen di atribut baru, kalau -1 artinya gaada
@@ -74,7 +74,7 @@ kutambahin nggak hanya 360 dari heading awalnya dia
 tapi 6*360, 2160 dari heading awalnya, 
 Kenapa jadi 6*360? Karena ada 5 tick (default) 
 sebelum dia ditonate dan ditambah 360 buat
-ngasih tahu kalau dia ini teleporter bertahan, 
+ngasih tahu kalau dia ini teleporter bertahan,
 jadi, cara kerjanya nanti, di fungsi 
 checkTeleportBertahan, di tiap tick, dia bakal ngecek
 apakah headingnya udah kurang dari 720 atau belum, 
