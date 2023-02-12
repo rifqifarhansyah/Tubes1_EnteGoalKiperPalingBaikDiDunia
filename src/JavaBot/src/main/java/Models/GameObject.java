@@ -15,6 +15,11 @@ public class GameObject {
   public Integer supernovaAvailable;
   public Integer teleCount;
   public Integer shieldCount;
+  public boolean afterburner;
+  public boolean asteroidField;
+  public boolean gasCloud;
+  public boolean superFood;
+  public boolean shield;
 
   public GameObject(UUID id, Integer size, Integer speed, Integer currentHeading, Position position,
       ObjectTypes gameObjectType, Integer effects, Integer torpedoCount, Integer supernovaAvailable,
@@ -30,6 +35,37 @@ public class GameObject {
     this.supernovaAvailable = supernovaAvailable;
     this.teleCount = teleCount;
     this.shieldCount = shieldCount;
+    this.afterburner = false;
+    this.asteroidField = false;
+    this.gasCloud = false;
+    this.superFood = false;
+    this.shield = false;
+    this.decodeEffect(effects);
+  }
+
+  public void decodeEffect(Integer effect) {
+    if (effect != 0) {
+      if (effect % 16 >= 0) {
+        this.shield = true;
+        effect -= 16;
+      } 
+      if (effect % 8 >= 0) {
+        this.superFood = true;
+        effect -= 8;
+      } 
+      if (effect % 4 >= 0) {
+        this.gasCloud = true;
+        effect -= 4;
+      } 
+      if (effect % 2 >= 0) {
+        this.asteroidField = true;
+        effect -= 2;
+      } 
+      if (effect % 1 == 0) {
+        this.afterburner = true;
+        effect -= 1;
+      } 
+    }    
   }
 
   public UUID getId() {
@@ -118,6 +154,26 @@ public class GameObject {
 
   public void setShieldCount(Integer shieldCount) {
     this.shieldCount = shieldCount;
+  }
+
+  public boolean getAfterburnerStatus() {
+    return this.afterburner;
+  }
+  
+  public boolean getAsteroidFieldStatus() {
+    return this.asteroidField;
+  }
+
+  public boolean getGasCloudStatus() {
+    return this.gasCloud;
+  }
+
+  public boolean getSuperfoodStatus() {
+    return this.superFood;
+  }
+
+  public boolean getShieldStatus() {
+    return this.shield;
   }
 
   public static GameObject FromStateList(UUID id, List<Integer> stateList) {

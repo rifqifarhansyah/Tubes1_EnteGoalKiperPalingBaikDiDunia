@@ -6,93 +6,138 @@ import java.util.*;
 import java.util.stream.*;
 
 public class Radar {
+  public boolean supernovaDefend;
+  public boolean teleportDefend;
+  public boolean torpedoDefend;
+  public boolean playerDefend;
 
   public static final int ALL_CLEAR = 0;
   public static final int TELEPORTDEFENCE = 1;
   public static final int SUPERNOVADEFENCE = 2;
   public static final int TORPEDODEFENCE = 3;
 
-  public static int radar(GameState gameState, GameState prevState, GameObject bot) {
-      private List<GameObject> getCloseGameObjects(GameState gameState, ObjectTypes objectType, int distance) {
-        return gameState.getGameObjects()
-            .stream()
-            .filter(item -> item.getGameObjectType() == objectType && (BotService.getDistanceBetween(bot, item) < distance))
-            .collect(Collectors.toList());
-      }
+  public Radar() {
+    supernovaDefend = false;
+    teleportDefend = false;
+    torpedoDefend = false;
+    playerDefend = false;
+}
+  
+  public List<GameObject> getCloseGameObjects(GameState gameState, GameObject bot, ObjectTypes objectType, int distance) {
+    // Mendapatkan semua gameObject dalam radius distance
+    if (objectType == ObjectTypes.PLAYER) {
+      return gameState.getPlayerGameObjects()
+      .stream()
+      .filter(item -> item.getGameObjectType() == objectType && (BotService.getDistanceBetween(bot, item) < (distance + bot.getSize() + item.getSize())) )
+      .collect(Collectors.toList());  
+    } else {
+      return gameState.getGameObjects()
+      .stream()
+      .filter(item -> item.getGameObjectType() == objectType && (BotService.getDistanceBetween(bot, item) < (distance + bot.getSize() + item.getSize())))
+      .collect(Collectors.toList());
+    }
 
-      private int checkObjects(List<GameObject> prevObjects, List<GameObject> currentObjects, GameObject bot, int returnValue) {
-        for (int i = 0; i < prevObjects.size(); i++) {
-          for (int j = 0; j < currentObjects.size(); j++) {
-            if (prevObjects.get(i).getId() == currentObjects.get(j).getId()) {
-              if ((prevObjects.get(i).getPosition().x - bot.getPosition().x) != 0) {
-                var prevGradient = BotService.toDegrees(Math.atan2(prevObjects.get(i).getPosition().y - bot.getPosition().y,
-                    prevObjects.get(i).getPosition().x - bot.getPosition().x));
-                var curGradient = BotService.toDegrees(Math.atan2(currentObjects.get(j).getPosition().y - bot.getPosition().y,
-                    currentObjects.get(j).getPosition().x - bot.getPosition().x));
-                if ((prevGradient - curGradient) < 0.05 || (prevGradient - curGradient) > -0.05) {
-                  return returnValue;
-                }
-              } else if ((prevObjects.get(i).getPosition().y - bot.getPosition().y) != 0) {
-                var prevGradient = BotService.toDegrees(Math.atan2(prevObjects.get(i).getPosition().x - bot.getPosition().x,
-                    prevObjects.get(i).getPosition().y - bot.getPosition().y));
-                var curGradient = BotService.toDegrees(Math.atan2(currentObjects.get(j).getPosition().x - bot.getPosition().x,
-                    currentObjects.get(j).getPosition().y - bot.getPosition().y));
-                if ((prevGradient - curGradient) < 0.05 || (prevGradient - curGradient) > -0.05) {
-                  return returnValue;
-                }
-              } else {
-                return 0;
-              }
-            }
+  }
+
+  // public static int checkObjects(List<GameObject> prevState, List<GameObject> currentState, GameObject bot, int returnValue) {
+  //   for (int i = 0; i < prevState.size(); i++) {
+  //     for (int j = 0; j < currentState.size(); j++) {
+  //       if (prevState.get(i).getId() == currentState.get(j).getId()) {
+  //         if ((prevState.get(i).getPosition().x - bot.getPosition().x) != 0) {
+  //           var prevGradient = BotService.toDegrees(Math.atan2(prevState.get(i).getPosition().y - bot.getPosition().y,
+  //               prevState.get(i).getPosition().x - bot.getPosition().x));
+  //           var curGradient = BotService.toDegrees(Math.atan2(currentState.get(j).getPosition().y - bot.getPosition().y,
+  //               currentState.get(j).getPosition().x - bot.getPosition().x));
+  //           if ((prevGradient - curGradient) < 0.05 || (prevGradient - curGradient) > -0.05) {
+  //             return returnValue;
+  //           }
+  //         } else if ((prevState.get(i).getPosition().y - bot.getPosition().y) != 0) {
+  //           var prevGradient = BotService.toDegrees(Math.atan2(prevState.get(i).getPosition().x - bot.getPosition().x,
+  //               prevState.get(i).getPosition().y - bot.getPosition().y));
+  //           var curGradient = BotService.toDegrees(Math.atan2(currentState.get(j).getPosition().x - bot.getPosition().x,
+  //               currentState.get(j).getPosition().y - bot.getPosition().y));
+  //           if ((prevGradient - curGradient) < 0.05 || (prevGradient - curGradient) > -0.05) {
+  //             return returnValue;
+  //           }
+  //         } else {
+  //           return 0;
+  //         }
+  //       }
+  //     }
+  //   }
+  //   return 0;
+  // }
+
+  public GameObject checkObjectsNextVersion(List<GameObject> prevObjects, List<GameObject> currentObjects, GameObject bot, int vs) {    
+    List<GameObject> objectList = new ArrayList<>();
+
+    for (int i = 0; i < prevObjects.size(); i++) {
+      for (int j = 0; j < currentObjects.size(); j++) {
+        if (prevObjects.get(i).getId().equals(currentObjects.get(j).getId())) {
+          double prevDistance = BotService.getDistanceBetween(prevObjects.get(i), bot);
+          double currDistance = BotService.getDistanceBetween(currentObjects.get(j), bot);
+          double vm = (prevDistance - currDistance);
+          double radian = Math.atan2(bot.getSize(),currDistance);
+          
+          if (currentObjects.get(j).gameObjectType == ObjectTypes.SUPERNOVA_BOMB) {
+            radian = Math.atan2(480,currDistance);
+          } 
+
+          if (currentObjects.get(j).getGameObjectType() == ObjectTypes.PLAYER) {
+            vs = 200/currentObjects.get(j).getSize();
+            // System.out.println("vm: " + vm + " |  vs:  " + vs*Math.cos(radian)+ "|  distance : "+BotService.getDistanceBetween(bot, currentObjects.get(j)) );
+          }
+
+         
+          // System.out.println();
+
+          if (vm > vs * Math.cos(radian)) {
+            // System.out.println("vm: " + vm + " >  vs:  " + vs*Math.cos(radian));
+            objectList.add(currentObjects.get(j));
           }
         }
-        return 0;
       }
+    }
 
-      private int checkObjectsNextVersion(List<GameObject> prevObjects, List<GameObject> currentObjects, GameObject bot, int returnValue, int vs) {
-        for (int i = 0; i < prevObjects.size(); i++) {
-          for (int j = 0; j < currentObjects.size(); j++) {
-            if (prevObjects.get(i).getId() == currentObjects.get(j).getId()) {
-              double deltaX = prevObjects.get(i).getPosition().x - bot.getPosition().x;
-              double deltaY = prevObjects.get(i).getPosition().y - bot.getPosition().y;
-              double prevRadians = Math.atan2(deltaY, deltaX);
-              double prevDegrees = Math.toDegrees(prevRadians);
+    // System.out.println("test");
 
-              deltaX = currentObjects.get(j).getPosition().x - bot.getPosition().x;
-              deltaY = currentObjects.get(j).getPosition().y - bot.getPosition().y;
-              double currRadians = Math.atan2(deltaY, deltaX);
-              double currDegrees = Math.toDegrees(currRadians);
+    if (objectList.size() > 0) {
+      var newObjList = objectList.stream()
+      .sorted(Comparator.comparing(item -> BotService.getDistanceBetween(bot, item)))
+      .collect(Collectors.toList()); 
+      return newObjList.get(0);
+    }
+    else {
+      return null;
+    }
+  }
 
-              int prevDistance = BotService.getDistanceBetween(prevObjects.get(i), bot);
-              int currDistance = BotService.getDistanceBetween(currentObjects.get(j), bot);
-              int vm = (prevDistance - currDistance);
-              if (vm > vs * Math.cos(prevRadians-currRadians)) {
-                return returnValue;
-              }
-            }
-          }
-        }
-        return 0;
-      }
-      
+  public GameObject checkRadar(GameState gameState, GameState prevState, GameObject bot) {
       if(prevState != null){
-        var prevSupernova = getCloseGameObjects(prevState, ObjectTypes.SUPERNOVA_BOMB, 200);
-        var currSupernova = getCloseGameObjects(gameState, ObjectTypes.SUPERNOVA_BOMB, 200);
-        var prevTele = getCloseGameObjects(prevState, ObjectTypes.TELEPORTER, 120);
-        var currTele = getCloseGameObjects(gameState, ObjectTypes.TELEPORTER, 120);
-        var prevTorpedo = getCloseGameObjects(prevState, ObjectTypes.TORPEDO, 120);
-        var currTorpedo = getCloseGameObjects(gameState, ObjectTypes.TORPEDO, 120);
-        var prevPlayer = getCloseGameObjects(prevState, ObjectTypes.PLAYER, 120);
-        var currPlayer = getCloseGameObjects(gameState, ObjectTypes.PLAYER, 120);
+        var prevSupernova = getCloseGameObjects(prevState, bot, ObjectTypes.SUPERNOVA_BOMB, 800);
+        var currSupernova = getCloseGameObjects(gameState, bot, ObjectTypes.SUPERNOVA_BOMB, 800);
 
-        checkObjects(prevSupernova, currSupernova, bot, SUPERNOVADEFENCE);
-        checkObjects(prevTele, currTele, bot, TELEPORTDEFENCE);
-        checkObjects(prevTorpedo, currTorpedo, bot, TORPEDODEFENCE);
-        checkObjectsNextVersion(prevSupernova, currSupernova, bot, SUPERNOVADEFENCE, 40);
-        checkObjectsNextVersion(prevTele, currTele, bot, TELEPORTDEFENCE, 20);
-        checkObjectsNextVersion(prevTorpedo, currTorpedo, bot, TORPEDODEFENCE, 20);
+        var prevTele = getCloseGameObjects(prevState, bot, ObjectTypes.TELEPORTER, 200);
+        var currTele = getCloseGameObjects(gameState, bot, ObjectTypes.TELEPORTER, 200);
+
+        var prevTorpedo = getCloseGameObjects(prevState, bot, ObjectTypes.TORPEDO_SALVO, 280);
+        var currTorpedo = getCloseGameObjects(gameState, bot, ObjectTypes.TORPEDO_SALVO, 280);
+
+        var prevPlayer = getCloseGameObjects(prevState, bot, ObjectTypes.PLAYER, 200);
+        var currPlayer = getCloseGameObjects(gameState, bot, ObjectTypes.PLAYER, 150);
+
+        
+        var danger = checkObjectsNextVersion(prevSupernova, currSupernova, bot, 40);
+        if (danger != null) {supernovaDefend=true;return danger;}
+        danger = checkObjectsNextVersion(prevTele, currTele, bot, 20);
+        if (danger != null) {teleportDefend=true;return danger;}
+        danger = checkObjectsNextVersion(prevTorpedo, currTorpedo, bot, 20);
+        if (danger != null) {torpedoDefend=true;return danger;}
+        danger = checkObjectsNextVersion(prevPlayer, currPlayer, bot, 20);
+        if (danger != null) {playerDefend=true;return danger;}
       }
-
+      return null;
+    }
     // if (prevState != null) {
     //   var prevSupernova = prevState.getGameObjects()
     //       .stream()
@@ -216,6 +261,5 @@ public class Radar {
     //     }
     //   }
     // } 
-    return 0;
-  }
+
 }

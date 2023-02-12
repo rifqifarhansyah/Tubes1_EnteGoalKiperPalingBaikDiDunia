@@ -8,9 +8,11 @@ import java.util.stream.*;
 
 public class BotService {
     private GameObject bot;
-    private PlayerAction playerAction;
+    public PlayerAction playerAction;
     private GameState gameState;
-    private GameState prevState;
+    private GameState prevState = null;
+    public Integer tick = null;
+    public UUID objectTracker = null;
 
     public BotService() {
         this.playerAction = new PlayerAction();
@@ -35,20 +37,43 @@ public class BotService {
     }
 
     public void computeNextPlayerAction(PlayerAction playerAction) {
-        playerAction.action = PlayerActions.FORWARD;
+        playerAction.action = PlayerActions.STOP;
         playerAction.heading = 0;
 
         var objectState = gameState.getGameObjects();
         var playerState = gameState.getPlayerGameObjects();
 
+        var objectRadar = new Radar();
 
-        if (!objectState.isEmpty() && !playerState.isEmpty()) {
-       
-           
+        if (!objectState.isEmpty() && !playerState.isEmpty() && prevState!=null && gameState.getWorld().getCurrentTick() != tick ) {
+            var warning = objectRadar.checkRadar(gameState, prevState, bot);
+            System.out.println(warning);
+            if (warning != null) {
+                
+                if (warning.gameObjectType == ObjectTypes.SUPERNOVA_BOMB || objectRadar.supernovaDefend) {
+                    // Jika muncul bahaya supernova bomb 
 
-    
+                } else if (warning.gameObjectType == ObjectTypes.TELEPORTER || objectRadar.teleportDefend) {
+                    // Jika muncul bahaya teleporter
+
+                } else if (warning.gameObjectType == ObjectTypes.TORPEDO_SALVO || objectRadar.torpedoDefend) {
+                    // Jika muncul bahaya torpedo
+
+                } else if (warning.gameObjectType == ObjectTypes.PLAYER) {
+                    // Jika muncul bahaya player
+                    // System.out.println(warning.getGameObjectType());
+                    objectTracker = GreedyCommand.run(warning,playerAction,objectTracker,bot);
+                } 
+            } else {
+                objectTracker = null;
+                playerAction.action = PlayerActions.STOP;
+            }
         }
 
+        if (gameState.getWorld().getCurrentTick() != tick) {
+            prevState = gameState;
+            tick = gameState.getWorld().getCurrentTick();
+        }
         this.playerAction = playerAction;
     }
 
@@ -81,6 +106,4 @@ public class BotService {
     public static int toDegrees(double v) {
         return (int) (v * (180 / Math.PI));
     }
-
-
 }
