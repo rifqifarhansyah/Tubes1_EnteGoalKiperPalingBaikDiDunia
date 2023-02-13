@@ -13,6 +13,7 @@ public class BotService {
     private GameState prevState = null;
     public Integer tick = null;
     public UUID objectTracker = null;
+    private int headingTele = -1;
 
     public BotService() {
         this.playerAction = new PlayerAction();
@@ -36,6 +37,53 @@ public class BotService {
         this.playerAction = playerAction;
     }
 
+    public int teleportSerang(PlayerAction playerAction, int firedTeleport) {
+        // Punya return value yang menandakan heading teleporter dan bahwa telah menembakkan teleporter
+        playerAction.action = PlayerActions.FIRETELEPORT;
+    
+        if (!gameState.getGameObjects().isEmpty()) {
+            // Kalau belum pakai radar
+            var playerList = gameState.getGameObjects()
+                    .stream().filter(item -> item.getGameObjectType() == ObjectTypes.PLAYER)
+                    .sorted(Comparator
+                            .comparing(item -> getDistanceBetween(bot, item)))
+                    .collect(Collectors.toList());
+
+            playerAction.heading = getHeadingBetween(bot, playerList.get(1));
+        }
+
+        return playerAction.heading;
+    }
+
+    public int checkTeleportSerang (PlayerAction playerAction, int headingTele) {
+        var teleporterList = gameState.getGameObjects()
+            .stream().filter(item -> item.getGameObjectType() == ObjectTypes.TELEPORTER && 
+            item.getCurrentHeading() == headingTele) // Untuk mengetahui apakah teleporter punya kita atau bukan, karena heading kemungkinan besar unik
+            .sorted(Comparator
+                .comparing(item -> getDistanceBetween(bot, item)))
+            .collect(Collectors.toList());
+        
+        var enemyList = gameState.getGameObjects()
+            .stream().filter(item -> item.getGameObjectType() == ObjectTypes.PLAYER)
+            .sorted(Comparator
+                  .comparing(item -> getDistanceBetween(teleporterList.get(0), item)))
+            .collect(Collectors.toList());
+    
+        if (!teleporterList.isEmpty()) { // Jika teleporter masih ada dalam permainan
+            var teleporterDistance = getDistanceBetween(teleporterList.get(0), enemyList.get(1));       
+            if (teleporterDistance <= bot.getSize() + 10) { // Jika radius tambah 10 kurang dari jarak teleporter ke musuh terdekat
+                playerAction.action = PlayerActions.TELEPORT;
+                return -1;
+            } 
+
+            // Return heading awal, tunggu tick selanjutnya
+            // jika pada tick2 selanjutnya teleporter melebihi boundary maka otomatis hilang
+            return headingTele; 
+        } else {
+            return -1;
+        }
+    }
+    
     public void computeNextPlayerAction(PlayerAction playerAction) {
         playerAction.action = PlayerActions.STOP;
         playerAction.heading = 0;
@@ -65,8 +113,23 @@ public class BotService {
                     objectTracker = GreedyCommand.run(warning,playerAction,objectTracker,bot);
                 } 
             } else {
-                objectTracker = null;
-                playerAction.action = PlayerActions.STOP;
+                if (headingTele != -1) {
+                    headingTele = checkTeleportSerang(playerAction, headingTele);
+                } else {
+                    objectTracker = null;
+                    playerAction.action = PlayerActions.STOP;
+                    var enemyList = gameState.getGameObjects()
+                        .stream().filter(item -> item.getGameObjectType() == ObjectTypes.PLAYER)
+                        .sorted(Comparator
+                            .comparing(item -> getDistanceBetween(bot, item)))
+                        .collect(Collectors.toList()); 
+                    
+                    if (bot.getTeleCount() != 0) {
+                        if (bot.getSize() > enemyList.get(1).getSize() + 20) {
+                            headingTele = teleportSerang(playerAction, headingTele);
+                        }
+                    } 
+                }
             }
         }
 
