@@ -26,10 +26,12 @@ public class Radar {
   public List<GameObject> getCloseGameObjects(GameState gameState, GameObject bot, ObjectTypes objectType, int distance) {
     // Mendapatkan semua gameObject dalam radius distance
     if (objectType == ObjectTypes.PLAYER) {
-      return gameState.getPlayerGameObjects()
+      var allPlayer =  gameState.getPlayerGameObjects()
       .stream()
       .filter(item -> item.getGameObjectType() == objectType && (BotService.getDistanceBetween(bot, item) < (distance + bot.getSize() + item.getSize())) )
-      .collect(Collectors.toList());  
+      .sorted(Comparator.comparing(item -> BotService.getDistanceBetween(bot, item)))
+      .collect(Collectors.toList());
+      return allPlayer.subList(1, allPlayer.size());  
     } else {
       return gameState.getGameObjects()
       .stream()
@@ -74,26 +76,24 @@ public class Radar {
     for (int i = 0; i < prevObjects.size(); i++) {
       for (int j = 0; j < currentObjects.size(); j++) {
         if (prevObjects.get(i).getId().equals(currentObjects.get(j).getId())) {
+
           double prevDistance = BotService.getDistanceBetween(prevObjects.get(i), bot);
           double currDistance = BotService.getDistanceBetween(currentObjects.get(j), bot);
           double vm = (prevDistance - currDistance);
-          double radian = Math.atan2(bot.getSize(),currDistance);
-          
-          if (currentObjects.get(j).gameObjectType == ObjectTypes.SUPERNOVA_BOMB) {
-            radian = Math.atan2(480,currDistance);
-          } 
 
           if (currentObjects.get(j).getGameObjectType() == ObjectTypes.PLAYER) {
-            vs = 200/currentObjects.get(j).getSize();
-            // System.out.println("vm: " + vm + " |  vs:  " + vs*Math.cos(radian)+ "|  distance : "+BotService.getDistanceBetween(bot, currentObjects.get(j)) );
-          }
-
-         
-          // System.out.println();
-
-          if (vm > vs * Math.cos(radian)) {
-            // System.out.println("vm: " + vm + " >  vs:  " + vs*Math.cos(radian));
-            objectList.add(currentObjects.get(j));
+            if (currentObjects.get(j).getSize() > bot.getSize() && vm > 0) {
+              objectList.add(currentObjects.get(j));
+            }
+          } else {
+            double radian = Math.atan2(bot.getSize(),currDistance);
+            if (currentObjects.get(j).gameObjectType == ObjectTypes.SUPERNOVA_BOMB) {
+              radian = Math.atan2(480,currDistance);
+            } 
+            if (vm > vs * Math.cos(radian)) {
+              // System.out.println("vm: " + vm + " >  vs:  " + vs*Math.cos(radian));
+              objectList.add(currentObjects.get(j));
+            }
           }
         }
       }

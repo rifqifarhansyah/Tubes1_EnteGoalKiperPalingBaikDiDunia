@@ -19,7 +19,6 @@ public class BotService {
         this.gameState = new GameState();
     }
 
-
     public GameObject getBot() {
         return this.bot;
     }
@@ -36,37 +35,47 @@ public class BotService {
         this.playerAction = playerAction;
     }
 
-    public void computeNextPlayerAction(PlayerAction playerAction) {
-        playerAction.action = PlayerActions.STOP;
-        playerAction.heading = 0;
+    public void computeNextPlayerAction(PlayerAction playerAction) {        
 
         var objectState = gameState.getGameObjects();
         var playerState = gameState.getPlayerGameObjects();
 
         var objectRadar = new Radar();
 
-        if (!objectState.isEmpty() && !playerState.isEmpty() && prevState!=null && gameState.getWorld().getCurrentTick() != tick ) {
-            var warning = objectRadar.checkRadar(gameState, prevState, bot);
-            System.out.println(warning);
-            if (warning != null) {
+        if (!objectState.isEmpty() && !playerState.isEmpty() && prevState != null) {
+            if (gameState.getWorld().getCurrentTick() != tick) {
+                System.out.println(gameState.getWorld().getCurrentTick());
+                var warning = objectRadar.checkRadar(gameState, prevState, bot);
+                // System.out.println(warning);
+                if (warning != null) {
+
+                    if (warning.gameObjectType == ObjectTypes.SUPERNOVA_BOMB || objectRadar.supernovaDefend) {
+                        // Jika muncul bahaya supernova bomb
+
+                    } else if (warning.gameObjectType == ObjectTypes.TELEPORTER || objectRadar.teleportDefend) {
+                        // Jika muncul bahaya teleporter
+
+                    } else if (warning.gameObjectType == ObjectTypes.TORPEDO_SALVO || objectRadar.torpedoDefend) {
+                        // Jika muncul bahaya torpedo
+
+                    } else if (warning.gameObjectType == ObjectTypes.PLAYER) {
+                        System.out.println(
+                                "1. " + warning.getGameObjectType() + "   heading:  " + warning.getCurrentHeading());
+                        // Jika muncul bahaya player
+                        // System.out.println(bot.getEffects());
+                        playerAction = GreedyCommand.run(warning, playerAction, objectTracker, bot);
+                        objectTracker = warning.getId();
+                        // System.out.println(warning.getCurrentHeading() + " "
+                        // +bot.getCurrentHeading());
+
+                    }
+
+                } else {
+                    System.out.println("aman");
+                    objectTracker = null;
+                    playerAction.action = PlayerActions.STOP;
+                }
                 
-                if (warning.gameObjectType == ObjectTypes.SUPERNOVA_BOMB || objectRadar.supernovaDefend) {
-                    // Jika muncul bahaya supernova bomb 
-
-                } else if (warning.gameObjectType == ObjectTypes.TELEPORTER || objectRadar.teleportDefend) {
-                    // Jika muncul bahaya teleporter
-
-                } else if (warning.gameObjectType == ObjectTypes.TORPEDO_SALVO || objectRadar.torpedoDefend) {
-                    // Jika muncul bahaya torpedo
-
-                } else if (warning.gameObjectType == ObjectTypes.PLAYER) {
-                    // Jika muncul bahaya player
-                    // System.out.println(warning.getGameObjectType());
-                    objectTracker = GreedyCommand.run(warning,playerAction,objectTracker,bot);
-                } 
-            } else {
-                objectTracker = null;
-                playerAction.action = PlayerActions.STOP;
             }
         }
 
@@ -87,7 +96,8 @@ public class BotService {
     }
 
     private void updateSelfState() {
-        Optional<GameObject> optionalBot = gameState.getPlayerGameObjects().stream().filter(gameObject -> gameObject.id.equals(bot.id)).findAny();
+        Optional<GameObject> optionalBot = gameState.getPlayerGameObjects().stream()
+                .filter(gameObject -> gameObject.id.equals(bot.id)).findAny();
         optionalBot.ifPresent(bot -> this.bot = bot);
     }
 
