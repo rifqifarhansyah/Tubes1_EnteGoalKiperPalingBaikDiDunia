@@ -44,9 +44,9 @@ public class BotService {
 
         if (!objectState.isEmpty() && !playerState.isEmpty() && prevState != null) {
             if (gameState.getWorld().getCurrentTick() != tick) {
-                System.out.println(gameState.getWorld().getCurrentTick());
+                System.out.println("tick: " + gameState.getWorld().getCurrentTick());
                 var warning = objectRadar.checkRadar(gameState, prevState, bot);
-                // System.out.println(warning);
+                // System.out.println(warning);                
                 if (warning != null) {
 
                     if (warning.gameObjectType == ObjectTypes.SUPERNOVA_BOMB || objectRadar.supernovaDefend) {
@@ -59,8 +59,8 @@ public class BotService {
                         // Jika muncul bahaya torpedo
 
                     } else if (warning.gameObjectType == ObjectTypes.PLAYER) {
-                        System.out.println(
-                                "1. " + warning.getGameObjectType() + "   heading:  " + warning.getCurrentHeading());
+                        // System.out.println(
+                        //         "1. " + warning.getGameObjectType() + "   heading:  " + warning.getCurrentHeading());
                         // Jika muncul bahaya player
                         // System.out.println(bot.getEffects());
                         playerAction = GreedyCommand.run(warning, playerAction, objectTracker, bot);
@@ -73,8 +73,14 @@ public class BotService {
                 } else {
                     System.out.println("aman");
                     objectTracker = null;
-                    playerAction.action = PlayerActions.STOP;
+                    if (bot.getAfterburnerStatus()) {
+                        playerAction.action = PlayerActions.STOPAFTERBURNER;
+                    } else {
+                        GreedyCommand.catchFood(gameState.getGameObjects(), bot, playerAction);
+                    }
+                    // playerAction.action = PlayerActions.STOP;
                 }
+                GreedyCommand.checkBorder(bot, gameState.getWorld(), playerAction);
                 
             }
         }
@@ -82,8 +88,10 @@ public class BotService {
         if (gameState.getWorld().getCurrentTick() != tick) {
             prevState = gameState;
             tick = gameState.getWorld().getCurrentTick();
+            System.out.println();
         }
         this.playerAction = playerAction;
+        
     }
 
     public GameState getGameState() {
@@ -110,6 +118,11 @@ public class BotService {
     public static int getHeadingBetween(GameObject bot, GameObject otherObject) {
         var direction = toDegrees(Math.atan2(otherObject.getPosition().y - bot.getPosition().y,
                 otherObject.getPosition().x - bot.getPosition().x));
+        return (direction + 360) % 360;
+    }
+
+    public static int getHeadingBetween(GameObject bot, int x, int y) {
+        var direction = toDegrees(Math.atan2(y - bot.getPosition().y, x - bot.getPosition().x));
         return (direction + 360) % 360;
     }
 
