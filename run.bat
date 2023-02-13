@@ -32,4 +32,7 @@ timeout /t 1
 
 cd ../src/JavaBot/target/
 start java -jar JavaBot.jar
+timeout /t 10
+cd ../../../
+@REM start  .\visualiser\Galaxio.exe
 pause

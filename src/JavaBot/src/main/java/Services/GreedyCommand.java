@@ -6,17 +6,23 @@ import java.util.*;
 import java.util.stream.*;
 
 public class GreedyCommand extends BotService {
-  public static UUID run(GameObject enemy, PlayerAction p, UUID objectTracker, GameObject bot) {
+  public static PlayerAction run(GameObject enemy, PlayerAction p, UUID objectTracker, GameObject bot) {
     
+    System.out.println(bot.getAfterburnerStatus());
     activateAfterburner(p, bot, enemy, false);
+    // p.action = PlayerActions.FORWARD;
+    // System.out.println("2. " + enemy.getGameObjectType() + "   heading:  " + enemy.getCurrentHeading());
+    
 
     if (objectTracker == null || !(objectTracker == null? UUID.randomUUID() : objectTracker).equals(enemy.getId()) ) {
+
         p.heading = (enemy.currentHeading + 90) % 360;    
-        System.out.println(enemy.currentHeading + "   " +p.heading);
+        // System.out.println(enemy.getId() + "   " + objectTracker);
+        // System.out.println(enemy.currentHeading + "   " +p.heading);
         // System.out.println(commandTracker + "   " +  );
     }
-
-    return enemy.getId();
+    // System.out.println(p.getAction() + " " + p.heading);
+    return p;
     // return p;
   }
 
@@ -25,13 +31,23 @@ public class GreedyCommand extends BotService {
     if (attack) {
 
     } else {
-      if (bot.getAfterburnerStatus()) {
-        p.action = PlayerActions.FORWARD;
-      } else {
-        if (bot.getSize() > 30 && bot.getSpeed() != 0) {
+      // System.out.println(bot.getAfterburnerStatus());
+      if (!bot.getAfterburnerStatus()) {
+      System.out.println(bot.getSpeed());
+        if (bot.getSpeed() == 0) {
+          // System.out.println("speed 0");
+          p.action = PlayerActions.FORWARD;
+        } else if (bot.getSize() > 30) {
           p.action = PlayerActions.STARTAFTERBURNER;
         } else if (bot.getSize() < 20) {
+          // System.out.println("kurang dari 20");
+          p.action = PlayerActions.FORWARD;
+        }
+      } else {
+        if (bot.getSize() < 20) {
           p.action = PlayerActions.STOPAFTERBURNER;
+        } else {
+          p.action = PlayerActions.FORWARD;
         }
       }
 

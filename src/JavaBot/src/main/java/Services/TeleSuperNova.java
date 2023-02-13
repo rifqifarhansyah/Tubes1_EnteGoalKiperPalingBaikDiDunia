@@ -75,14 +75,16 @@ public class TeleSuperNova {
             .comparing(item -> getDistanceBetween(bot, item)))
           .collect(Collectors.toList());
 
-      var enemyList = gameState.getGameObjects()
+
+
+
+      if (!teleporterList.isEmpty()) { // Jika teleporter masih ada dalam permainan
+        var enemyList = gameState.getPlayerGameObjects()
         .stream().filter(item -> item.getGameObjectType() == ObjectTypes.PLAYER)
         .sorted(Comparator
               .comparing(item -> getDistanceBetween(teleporterList.get(0), item)))
         .collect(Collectors.toList());
-
-
-      if (!teleporterList.isEmpty()) { // Jika teleporter masih ada dalam permainan
+        
         var teleporterDistance = getDistanceBetween(teleporterList.get(0), enemyList.get(1));       
         if (teleporterDistance <= bot.getSize() + 10) { // Jika radius tambah 10 kurang dari jarak teleporter ke musuh terdekat
           playerAction.action = PlayerActions.TELEPORT;
