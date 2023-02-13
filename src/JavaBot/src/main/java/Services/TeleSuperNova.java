@@ -9,7 +9,6 @@ import java.util.stream.*;
 
 public class TeleSuperNova {
     private GameObject bot;
-    private World world;  
     private PlayerAction playerAction;
     private GameState gameState;
     private int headingTele;
@@ -34,6 +33,20 @@ public class TeleSuperNova {
 
     public void setPlayerAction(PlayerAction playerAction) {
         this.playerAction = playerAction;
+    }
+
+    public void tembakTorpedo(PlayerAction playerAction) {
+      playerAction.action = PlayerActions.FIRETORPEDOES;
+      
+      if (!gameState.getGameObjects().isEmpty()) {
+        var playerList = gameState.getGameObjects()
+                .stream().filter(item -> item.getGameObjectType() == ObjectTypes.PLAYER)
+                .sorted(Comparator
+                        .comparing(item -> getDistanceBetween(bot, item)))
+                .collect(Collectors.toList());
+
+        playerAction.heading = getHeadingBetween(playerList.get(1));
+      }
     }
 
     public int teleportSerang(PlayerAction playerAction, int firedTeleport) {
@@ -117,7 +130,7 @@ public class TeleSuperNova {
           var nextY = teleporterList.get(0).getPosition().getY() + 20*Math.sin(headingTele % 360); // Koor Y pada tick selanjutnya
           var nextPosition = Math.sqrt(Math.pow(nextX,2) + Math.pow(nextY,2)); // posisi teleporter pada tick selanjutnya   
           
-          if (nextPosition > world.getRadius()) { // Jika pada tick selanjutnya teleporter keluar border, teleport sekarang saja
+          if (nextPosition > gameState.getWorld().getRadius()) { // Jika pada tick selanjutnya teleporter keluar border, teleport sekarang saja
             playerAction.action = PlayerActions.TELEPORT;
             return -1;
           }
