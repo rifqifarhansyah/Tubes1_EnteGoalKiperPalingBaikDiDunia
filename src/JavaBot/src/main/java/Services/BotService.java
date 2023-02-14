@@ -10,8 +10,9 @@ public class BotService {
     private GameObject bot;
     public PlayerAction playerAction;
     private GameState gameState;
-    private GameState prevState = null;
+    // private GameState prevState = null;
     public Integer tick = null;
+    public Integer subtick = null;
     public UUID objectTracker = null;
     private int headingTele = -1;
 
@@ -92,10 +93,10 @@ public class BotService {
 
         var objectRadar = new Radar();
 
-        if (!objectState.isEmpty() && !playerState.isEmpty() && prevState != null) {
+        if (!objectState.isEmpty() && !playerState.isEmpty()) {
             if (gameState.getWorld().getCurrentTick() != tick) {
                 System.out.println("tick: " + gameState.getWorld().getCurrentTick());
-                var warning = objectRadar.checkRadar(gameState, prevState, bot);
+                var warning = objectRadar.checkRadar(gameState, bot);
                 // System.out.println(warning);
                 if (warning != null) {
 
@@ -122,23 +123,23 @@ public class BotService {
                     }
 
                 } else {
-                    if (headingTele != -1) {
-                        headingTele = checkTeleportSerang(playerAction, headingTele);
-                    } else {
-                        objectTracker = null;
-                        playerAction.action = PlayerActions.STOP;
-                        var enemyList = gameState.getGameObjects()
-                                .stream().filter(item -> item.getGameObjectType() == ObjectTypes.PLAYER)
-                                .sorted(Comparator
-                                        .comparing(item -> getDistanceBetween(bot, item)))
-                                .collect(Collectors.toList());
+                    // if (headingTele != -1) {
+                    //     headingTele = checkTeleportSerang(playerAction, headingTele);
+                    // } else {
+                    //     objectTracker = null;
+                    //     playerAction.action = PlayerActions.STOP;
+                    //     var enemyList = gameState.getPlayerGameObjects()
+                    //             .stream().filter(item -> item.getGameObjectType() == ObjectTypes.PLAYER)
+                    //             .sorted(Comparator
+                    //                     .comparing(item -> getDistanceBetween(bot, item)))
+                    //             .collect(Collectors.toList());
 
-                        if (bot.getTeleCount() != 0) {
-                            if (bot.getSize() > enemyList.get(1).getSize() + 20) {
-                                headingTele = teleportSerang(playerAction, headingTele);
-                            }
-                        }
-                    }
+                    //     if (bot.getTeleCount() != 0) {
+                    //         if (bot.getSize() > enemyList.get(1).getSize() + 20) {
+                    //             headingTele = teleportSerang(playerAction, headingTele);
+                    //         }
+                    //     }
+                    // }
 
                     System.out.println("aman");
 
@@ -150,12 +151,12 @@ public class BotService {
                     }
                     // playerAction.action = PlayerActions.STOP;
                 }
-                GreedyCommand.checkBorder(bot, gameState.getWorld(), playerAction);
+                GreedyCommand.evadeObject(bot, objectState, gameState.getWorld(), playerAction);
 
             }
 
             if (gameState.getWorld().getCurrentTick() != tick) {
-                prevState = gameState;
+                // prevState = gameState;
                 tick = gameState.getWorld().getCurrentTick();
                 System.out.println();
             }

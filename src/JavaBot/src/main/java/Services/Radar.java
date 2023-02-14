@@ -1,9 +1,13 @@
 package Services;
 
-import Enums.*;
-import Models.*;
-import java.util.*;
-import java.util.stream.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import Enums.ObjectTypes;
+import Models.GameObject;
+import Models.GameState;
 
 public class Radar {
   public boolean supernovaDefend;
@@ -89,33 +93,31 @@ public class Radar {
   // return 0;
   // }
 
-  public GameObject checkObjectsNextVersion(List<GameObject> prevObjects, List<GameObject> currentObjects,
-      GameObject bot, int vs) {
+  public GameObject checkObjectsNextVersion(List<GameObject> closeObjects, GameObject bot, int vs) {
     List<GameObject> objectList = new ArrayList<>();
-    if (prevObjects != null && currentObjects != null) {
-      for (int i = 0; i < prevObjects.size(); i++) {
-        for (int j = 0; j < currentObjects.size(); j++) {
-          if (prevObjects.get(i).getId().equals(currentObjects.get(j).getId())) {
+    if (closeObjects != null) {
+      for (int i = 0; i < closeObjects.size(); i++) {
+        double objDistance = BotService.getDistanceBetween(closeObjects.get(i), bot);
+        double warningTreshold = Math.atan2(bot.getSize(), objDistance);
+        double objRadian = BotService.getHeadingBetween(bot, closeObjects.get(i));
+        boolean warningStatus = bot.getCurrentHeading() > (objRadian - warningTreshold) % 360
+            || bot.getCurrentHeading() < (objRadian + warningTreshold) % 360;
 
-            double prevDistance = BotService.getDistanceBetween(prevObjects.get(i), bot);
-            double currDistance = BotService.getDistanceBetween(currentObjects.get(j), bot);
-            double vm = (prevDistance - currDistance);
-
-            if (currentObjects.get(j).getGameObjectType() == ObjectTypes.PLAYER) {
-              if (currentObjects.get(j).getSize() > bot.getSize() && vm > 0) {
-                objectList.add(currentObjects.get(j));
-              }
-            } else {
-              double radian = Math.atan2(bot.getSize(), currDistance);
-              if (currentObjects.get(j).gameObjectType == ObjectTypes.SUPERNOVA_BOMB) {
-                radian = Math.atan2(480, currDistance);
-              }
-              if (vm > vs * Math.cos(radian)) {
-                // System.out.println("vm: " + vm + " > vs: " + vs*Math.cos(radian));
-                objectList.add(currentObjects.get(j));
-              }
-            }
+        if (closeObjects.get(i).getGameObjectType() == ObjectTypes.PLAYER) {
+          if (closeObjects.get(i).getSize() > bot.getSize() && warningStatus) {
+            objectList.add(closeObjects.get(i));
           }
+        } else {
+          if (closeObjects.get(i).gameObjectType == ObjectTypes.SUPERNOVA_BOMB) {
+            warningTreshold = Math.atan2(bot.getSize() + 480, objDistance);
+            warningStatus = bot.getCurrentHeading() > (objRadian - warningTreshold) % 360
+                || bot.getCurrentHeading() < (objRadian + warningTreshold) % 360;
+          }
+          if (warningStatus) {
+            // System.out.println("vm: " + vm + " > vs: " + vs*Math.cos(radian));
+            objectList.add(closeObjects.get(i));
+          }
+
         }
       }
     } else {
@@ -134,36 +136,29 @@ public class Radar {
     }
   }
 
-  public GameObject checkRadar(GameState gameState, GameState prevState, GameObject bot) {
-    if (prevState != null) {
-      var prevSupernova = getCloseGameObjects(prevState, bot, ObjectTypes.SUPERNOVA_BOMB, 800);
+  public GameObject checkRadar(GameState gameState, GameObject bot) {
+    if (gameState != null) {
       var currSupernova = getCloseGameObjects(gameState, bot, ObjectTypes.SUPERNOVA_BOMB, 800);
-
-      var prevTele = getCloseGameObjects(prevState, bot, ObjectTypes.TELEPORTER, 200);
       var currTele = getCloseGameObjects(gameState, bot, ObjectTypes.TELEPORTER, 200);
-
-      var prevTorpedo = getCloseGameObjects(prevState, bot, ObjectTypes.TORPEDO_SALVO, 280);
       var currTorpedo = getCloseGameObjects(gameState, bot, ObjectTypes.TORPEDO_SALVO, 280);
-
-      var prevPlayer = getCloseGameObjects(prevState, bot, ObjectTypes.PLAYER, 200);
       var currPlayer = getCloseGameObjects(gameState, bot, ObjectTypes.PLAYER, 200);
 
-      var danger = checkObjectsNextVersion(prevSupernova, currSupernova, bot, 40);
+      var danger = checkObjectsNextVersion(currSupernova, bot, 40);
       if (danger != null) {
         supernovaDefend = true;
         return danger;
       }
-      danger = checkObjectsNextVersion(prevTele, currTele, bot, 20);
+      danger = checkObjectsNextVersion(currTele, bot, 20);
       if (danger != null) {
         teleportDefend = true;
         return danger;
       }
-      danger = checkObjectsNextVersion(prevTorpedo, currTorpedo, bot, 20);
+      danger = checkObjectsNextVersion(currTorpedo, bot, 20);
       if (danger != null) {
         torpedoDefend = true;
         return danger;
       }
-      danger = checkObjectsNextVersion(prevPlayer, currPlayer, bot, 20);
+      danger = checkObjectsNextVersion(currPlayer, bot, 20);
       if (danger != null) {
         playerDefend = true;
         return danger;

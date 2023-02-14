@@ -45,23 +45,23 @@ public class GameObject {
 
   public void decodeEffect(Integer effect) {
     if (effect != 0) {
-      if (effect % 16 >= 0) {
+      if (effect >= 16) {
         this.shield = true;
         effect -= 16;
       } 
-      if (effect % 8 >= 0) {
+      if (effect >= 8) {
         this.superFood = true;
         effect -= 8;
       } 
-      if (effect % 4 >= 0) {
+      if (effect >= 4) {
         this.gasCloud = true;
         effect -= 4;
       } 
-      if (effect % 2 >= 0) {
+      if (effect >= 2) {
         this.asteroidField = true;
         effect -= 2;
       } 
-      if (effect % 1 == 0) {
+      if (effect == 1) {
         this.afterburner = true;
         effect -= 1;
       } 
