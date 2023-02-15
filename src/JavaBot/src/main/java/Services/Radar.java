@@ -34,7 +34,7 @@ public class Radar {
       var allPlayer = gameState.getPlayerGameObjects()
           .stream()
           .filter(item -> item.getGameObjectType() == objectType
-              && (BotService.getDistanceBetween(bot, item) < (distance + bot.getSize() + item.getSize())))
+              && (BotService.getDistanceBetween(bot, item) - bot.getSize() - item.getSize() < distance))
           .sorted(Comparator.comparing(item -> BotService.getDistanceBetween(bot, item)))
           .collect(Collectors.toList());
       if (allPlayer.size() > 1) {
@@ -98,10 +98,10 @@ public class Radar {
     if (closeObjects != null) {
       for (int i = 0; i < closeObjects.size(); i++) {
         double objDistance = BotService.getDistanceBetween(closeObjects.get(i), bot);
-        double warningTreshold = Math.atan2(bot.getSize(), objDistance);
-        double objRadian = BotService.getHeadingBetween(bot, closeObjects.get(i));
-        boolean warningStatus = bot.getCurrentHeading() > (objRadian - warningTreshold) % 360
-            || bot.getCurrentHeading() < (objRadian + warningTreshold) % 360;
+        double warningTreshold = BotService.toDegrees(Math.atan2(bot.getSize() + 10, objDistance));
+        double objDegree = BotService.getHeadingBetween(closeObjects.get(i), bot);
+        boolean warningStatus = closeObjects.get(i).getCurrentHeading() > (objDegree - warningTreshold) &&
+            closeObjects.get(i).getCurrentHeading() < (objDegree + warningTreshold);
 
         if (closeObjects.get(i).getGameObjectType() == ObjectTypes.PLAYER) {
           if (closeObjects.get(i).getSize() > bot.getSize() && warningStatus) {
@@ -110,10 +110,13 @@ public class Radar {
         } else {
           if (closeObjects.get(i).gameObjectType == ObjectTypes.SUPERNOVA_BOMB) {
             warningTreshold = Math.atan2(bot.getSize() + 480, objDistance);
-            warningStatus = bot.getCurrentHeading() > (objRadian - warningTreshold) % 360
-                || bot.getCurrentHeading() < (objRadian + warningTreshold) % 360;
+            warningStatus = closeObjects.get(i).getCurrentHeading() > (objDegree - warningTreshold)
+                && closeObjects.get(i).getCurrentHeading() < (objDegree + warningTreshold);
           }
           if (warningStatus) {
+            // if (closeObjects.get(i).getGameObjectType() == ObjectTypes.TORPEDO_SALVO) {
+            //   System.out.println("heading: ");
+            // }
             // System.out.println("vm: " + vm + " > vs: " + vs*Math.cos(radian));
             objectList.add(closeObjects.get(i));
           }
