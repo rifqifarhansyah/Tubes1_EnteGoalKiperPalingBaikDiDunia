@@ -28,6 +28,23 @@ public class GreedyCommand extends BotService {
 
   public static void activateAfterburner(PlayerAction p, GameObject bot, GameObject enemy, boolean attack) {
     if (attack) {
+      if (bot.getAfterburnerStatus()) {
+        if (bot.getSize() - enemy.getSize() < 20 || bot.getSize() < 30) {
+          p.action = PlayerActions.STOPAFTERBURNER;
+          p.heading = BotService.getHeadingBetween(bot, enemy);
+        } else {
+          p.action = PlayerActions.FORWARD;
+          p.heading = BotService.getHeadingBetween(bot, enemy);
+        }
+      } else {
+        if (bot.getSpeed() == 0) {
+          p.action = PlayerActions.FORWARD;
+          p.heading = BotService.getHeadingBetween(bot, enemy);
+        } else if (bot.getSize() - enemy.getSize() > 20  && bot.getSize() > 40) {
+          p.action = PlayerActions.STARTAFTERBURNER;
+          p.heading = BotService.getHeadingBetween(bot, enemy);
+        }
+      }
 
     } else {
       // System.out.println(bot.getAfterburnerStatus());
@@ -37,7 +54,7 @@ public class GreedyCommand extends BotService {
           p.action = PlayerActions.FORWARD;
         } else if (bot.getSize() > 30) {
           if (enemy.getGameObjectType() == ObjectTypes.PLAYER) {
-            if (BotService.getDistanceBetween(bot, enemy) - bot.getSize() - enemy.getSize() < 100) {
+            if (BotService.getDistanceBetween(bot, enemy) - bot.getSize() - enemy.getSize() < 100 && bot.getSize() < 80) {
               p.action = PlayerActions.STARTAFTERBURNER;
             } else {
               p.action = PlayerActions.FORWARD;
@@ -59,7 +76,7 @@ public class GreedyCommand extends BotService {
           p.heading = getHeadingBetween(bot, enemy);
         } else {
           p.action = PlayerActions.FORWARD;
-          p.heading = (getHeadingBetween(bot, enemy) + 90) % 360;
+          p.heading = (getHeadingBetween(bot, enemy) + 120) % 360;
         }
       }
     }

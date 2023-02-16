@@ -126,6 +126,7 @@ public class BotService {
 
                     } else if (warning.gameObjectType == ObjectTypes.PLAYER) {
                         if (launchTorpedo(bot, warning, 150, playerAction, false)) {
+                            objectTracker = null;
                         } else {
                             playerAction = GreedyCommand.run(warning, playerAction, objectTracker, bot);
                             objectTracker = warning.getId();
@@ -140,9 +141,12 @@ public class BotService {
                         // +bot.getCurrentHeading());
 
                     }
+                else if (closestEnemy != null ? getDistanceBetween(closestEnemy, bot) - bot.getSize() - closestEnemy.getSize() < 20 : false) {
+                    GreedyCommand.activateAfterburner(playerAction, bot, closestEnemy, true);
+                }
 
                 } else if (launchTorpedo(bot, closestEnemy,
-                        closestEnemy != null ? closestEnemy.getSize() > 70 ? 300 : 200 : 200, playerAction, true)) {
+                        closestEnemy != null ? closestEnemy.getSize() > 60 ? 300 : 200 : 200, playerAction, true)) {
 
                 }
 
@@ -266,6 +270,12 @@ public class BotService {
             p.action = PlayerActions.FIRETORPEDOES;
             p.heading = getHeadingBetween(bot, enemy);
         }
+
+        // if (attack && condition) {
+        //     p.action = PlayerActions.FORWARD;
+        //     p.heading = getHeadingBetween(bot, enemy);
+        // }
+
         return condition;
     }
 }
