@@ -119,7 +119,7 @@ public class GreedyCommand extends BotService {
     objectTracker = checkHarmfulObject(bot, gameObj, p, ObjectTypes.ASTEROID_FIELD, 10, "evade asteroid field",
         objectTracker);
     objectTracker = checkHarmfulObject(bot, gameObj, p, ObjectTypes.GAS_CLOUD, 20, "evade gas cloud", objectTracker);
-    objectTracker = checkHarmfulObject(bot, gameObj, p, ObjectTypes.WORMHOLE, 20, "evade wormhole", objectTracker);
+    // objectTracker = checkHarmfulObject(bot, gameObj, p, ObjectTypes.WORMHOLE, 20, "evade wormhole", objectTracker);
     objectTracker = checkBorder(bot, w, p, objectTracker);
     return objectTracker;
   }

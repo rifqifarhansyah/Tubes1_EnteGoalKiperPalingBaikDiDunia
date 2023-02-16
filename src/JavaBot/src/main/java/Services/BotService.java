@@ -14,8 +14,8 @@ public class BotService {
     public Integer tick = null;
     public Integer subtick = null;
     public UUID objectTracker = null;
-    public UUID preyTracker = null;
-    private int headingTele = -1;
+    public GameObject launchedTeleport = null;
+    public boolean justLaunchedTeleportStatus = false;
 
     public BotService() {
         this.playerAction = new PlayerAction();
@@ -38,7 +38,7 @@ public class BotService {
         this.playerAction = playerAction;
     }
 
-    public int teleportSerang(PlayerAction playerAction, GameObject enemy) {
+    public void teleportSerang(PlayerAction playerAction, GameObject enemy) {
         // Punya return value yang menandakan heading teleporter dan bahwa telah
         // menembakkan teleporter
         playerAction.action = PlayerActions.FIRETELEPORT;
@@ -47,49 +47,56 @@ public class BotService {
         System.out.println("Attack with launch teleport " + "  bot size : " + bot.getSize()
                 + "    enemy size: " + enemy.getSize() + "  distance : "
                 + getDistanceBetween(bot, enemy));
-
-        return playerAction.heading;
+        // return GameObject;
     }
 
-    public int checkTeleportSerang(PlayerAction playerAction, int headingTele, UUID preyTracker,
-            List<GameObject> enemyList) {
+    public GameObject checkTeleportSerang(PlayerAction p, GameObject bot, GameObject launchedTeleport,
+            List<GameObject> enemyList, List<GameObject> teleportList) {
 
-        var teleporterList = gameState.getGameObjects()
-                .stream().filter(item -> item.getGameObjectType() == ObjectTypes.TELEPORTER &&
-                        item.getCurrentHeading() == headingTele) // Untuk mengetahui apakah teleporter punya kita atau
-                                                                 // bukan, karena heading kemungkinan besar unik
-                .sorted(Comparator
-                        .comparing(item -> getDistanceBetween(bot, item)))
-                .collect(Collectors.toList());
-
-        var enemy = enemyList
-                .stream().filter(item -> item.getId() == preyTracker)
-                .collect(Collectors.toList());
-
-        if (!teleporterList.isEmpty() && !enemy.isEmpty()) { // Jika teleporter masih ada dalam permainan
-            var teleporterDistance = getDistanceBetween(teleporterList.get(0), enemy.get(0));
-            if (teleporterDistance - bot.getSize() - enemy.get(0).getSize() <= 10) { // Jika radius tambah 10 kurang
-                                                                                     // dari jarak teleporter ke
-                // musuh terdekat
-                System.out.println("Attack with detonate teleport " + "  bot size : " + bot.getSize()
-                        + "    enemy size: " + enemy.get(0).getSize() + "  distance : "
-                        + getDistanceBetween(bot, enemy.get(0)));
-                playerAction.action = PlayerActions.TELEPORT;
-                this.preyTracker = null;
-                return -1;
+        boolean teleportStatus = false;
+        if (launchedTeleport != null) {
+            System.out.println("test 1");
+            for (int i = 0; i < teleportList.size(); i++) {
+                System.out.println(teleportList.get(i).getId() + "   " + launchedTeleport.getId());
+                if (teleportList.get(i).getId().equals(launchedTeleport.getId())) {
+                    teleportStatus = true;
+                    launchedTeleport = teleportList.get(i);
+                }
             }
+            GameObject updateLaunceTeleport = launchedTeleport;
+            System.out.println(updateLaunceTeleport);
+            // System.out.println(updateLaunceTeleport);
+            if (teleportStatus) {
+                System.out.println("test 2");
+                List<GameObject> closeEnemy = enemyList.stream()
+                        .filter(item -> getDistanceBetween(item, updateLaunceTeleport) - bot.getSize() - item.getSize() < 20
+                                && item.getId() != bot.getId())
+                        .sorted(Comparator.comparing(
+                                item -> getDistanceBetween(item, updateLaunceTeleport) - bot.getSize() - item.getSize()))
+                        .collect(Collectors.toList());
 
-            // Return heading awal, tunggu tick selanjutnya
-            // jika pada tick2 selanjutnya teleporter melebihi boundary maka otomatis hilang
-            return headingTele;
-        } else {
-            return -1;
+                if (closeEnemy.size() > 0) {
+                    System.out.println("detonate attack teleport  size " + bot.getSize() + "   enemy size :"
+                            + closeEnemy.get(0).getSize());
+                    p.action = PlayerActions.TELEPORT;
+                    p.heading = getHeadingBetween(bot, closeEnemy.get(0));
+                    return null;
+                } else {
+                    System.out.println("can't detonate, too far away");
+
+                    return updateLaunceTeleport;
+                }
+            }
         }
+        return null;
     }
 
     public void computeNextPlayerAction(PlayerAction playerAction) {
         var objectState = gameState.getGameObjects();
         var playerState = gameState.getGameObjects();
+        var teleportState = gameState.getGameObjects().stream()
+                .filter(item -> item.getGameObjectType() == ObjectTypes.TELEPORTER)
+                .sorted(Comparator.comparing(item -> getDistanceBetween(bot, item))).collect(Collectors.toList());
 
         List<GameObject> preyList = gameState.getPlayerGameObjects().stream()
                 .filter(item -> item.getSize() < bot.getSize())
@@ -106,6 +113,7 @@ public class BotService {
         if (!objectState.isEmpty() && !playerState.isEmpty()) {
             if (gameState.getWorld().getCurrentTick() != tick) {
                 System.out.println("tick: " + gameState.getWorld().getCurrentTick());
+                System.out.println(launchedTeleport);
                 var warning = objectRadar.checkRadar(gameState, bot);
                 // System.out.println(warning);
                 if (warning != null) {
@@ -140,44 +148,24 @@ public class BotService {
                         // System.out.println(warning.getCurrentHeading() + " "
                         // +bot.getCurrentHeading());
 
+                    } else if (closestEnemy != null
+                            ? getDistanceBetween(closestEnemy, bot) - bot.getSize() - closestEnemy.getSize() < 20
+                            : false) {
+                        GreedyCommand.activateAfterburner(playerAction, bot, closestEnemy, true);
                     }
-                else if (closestEnemy != null ? getDistanceBetween(closestEnemy, bot) - bot.getSize() - closestEnemy.getSize() < 20 : false) {
-                    GreedyCommand.activateAfterburner(playerAction, bot, closestEnemy, true);
-                }
+
+                } else if (!justLaunchedTeleportStatus && bot.getTeleCount() > 0 && bot.getSize() > 60
+                        && (closestEnemy != null
+                                ? bot.getSize() - closestEnemy.getSize() > 30
+                                : false)
+                        && launchedTeleport == null) {
+                    teleportSerang(playerAction, closestEnemy);
+                    justLaunchedTeleportStatus = true;
 
                 } else if (launchTorpedo(bot, closestEnemy,
-                        closestEnemy != null ? closestEnemy.getSize() > 60 ? 300 : 200 : 200, playerAction, true)) {
+                        closestEnemy != null ? (closestEnemy.getSize() > 60 ? 400 : 200) : 200, playerAction, true)) {
 
                 }
-
-                // if (bot.getSize() > 35 && bot.getTorpedoCount() > 0 && closestEnemy != null
-                // ? getDistanceBetween(bot, closestEnemy) - bot.getSize() -
-                // closestEnemy.getSize() > 200
-                // : false) {
-                // GreedyCommand.launchTorpedo(bot, closestEnemy, closestEnemy != null ?
-                // closestEnemy.getSize() > 70 ? 300 : 200 : 200, playerAction, true)
-                // System.out.println("attack");
-                // System.out.println("Attack with torpedo" + " bot size : " + bot.getSize()
-                // + " enemy size: "
-                // + closestEnemy.getSize() + " distance : "
-                // + (getDistanceBetween(bot, closestEnemy) - bot.getSize() -
-                // closestEnemy.getSize())
-                // + " heading: "
-                // + getHeadingBetween(bot, closestEnemy));
-                // playerAction.action = PlayerActions.FIRETORPEDOES;
-                // playerAction.heading = getHeadingBetween(bot, closestEnemy);
-                // }
-                // {
-                // } else if (bot.getTeleCount() > 0 && bot.getSize() > 50 && closestEnemy !=
-                // null
-                // ? bot.getSize() - closestEnemy.getSize() > 40
-                // : false) {
-                // preyTracker = closestEnemy.getId();
-                // headingTele = teleportSerang(playerAction, closestEnemy);
-
-                // // if ()
-
-                // }
 
                 // playerAction.action = PlayerActions.STOP;
                 else {
@@ -192,6 +180,13 @@ public class BotService {
                 }
                 objectTracker = GreedyCommand.evadeObject(bot, objectState, gameState.getWorld(), playerAction,
                         objectTracker);
+                if (justLaunchedTeleportStatus && teleportState.size() > 0
+                        && playerAction.action != PlayerActions.FIRETELEPORT) {
+                    launchedTeleport = teleportState.get(0);
+                    justLaunchedTeleportStatus = false;
+                }
+                launchedTeleport = checkTeleportSerang(playerAction, bot, launchedTeleport, preyList, teleportState);
+                System.out.println(launchedTeleport);
                 // if (headingTele != -1) {
                 // headingTele = checkTeleportSerang(playerAction, headingTele, preyTracker,
                 // playerState);
@@ -246,12 +241,13 @@ public class BotService {
 
     public boolean launchTorpedo(GameObject bot, GameObject enemy, int distanceTreshold, PlayerAction p,
             boolean attack) {
-        boolean condition1 = bot.getSize() > 35;
+        boolean condition1 = bot.getSize() > (attack ? 35 : 20);
         boolean condition2 = false;
 
         if (attack) {
             condition2 = enemy != null
                     ? getDistanceBetween(bot, enemy) - bot.getSize() - enemy.getSize() < distanceTreshold
+                            && enemy.getSize() > 20
                     : false;
         } else {
             condition2 = getDistanceBetween(bot, enemy) - bot.getSize() - enemy.getSize() > distanceTreshold;
@@ -272,8 +268,8 @@ public class BotService {
         }
 
         // if (attack && condition) {
-        //     p.action = PlayerActions.FORWARD;
-        //     p.heading = getHeadingBetween(bot, enemy);
+        // p.action = PlayerActions.FORWARD;
+        // p.heading = getHeadingBetween(bot, enemy);
         // }
 
         return condition;
