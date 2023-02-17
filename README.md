@@ -107,8 +107,9 @@ java -jar EnteGoalKiperPalingBaikDiDunia.jar
 ## Structure
 ```bash
 │   .gitignore
+│   Dockerfile
+│   pom.xml
 │   README.md
-│   run.bat
 │
 ├───.vscode
 │       settings.json
@@ -125,96 +126,149 @@ java -jar EnteGoalKiperPalingBaikDiDunia.jar
 │       Torpedo1.png
 │       Torpedo2.png
 │
-└───src
-    └───JavaBot
-        │   Dockerfile
-        │   pom.xml
-        │   target.zip
-        │
-        ├───.github
-        │   └───workflows
-        │           .gitkeep
-        │
-        ├───src
-        │   └───main
-        │       └───java
-        │           │   Main.java
-        │           │
-        │           ├───Enums
-        │           │       Effects.java
-        │           │       ObjectTypes.java
-        │           │       PlayerActions.java
-        │           │
-        │           ├───Models
-        │           │       GameObject.java
-        │           │       GameState.java
-        │           │       GameStateDto.java
-        │           │       PlayerAction.java
-        │           │       Position.java
-        │           │       World.java
-        │           │
-        │           └───Services
-        │                   BotService.java
-        │                   GreedyCommand.java
-        │                   PanduanTeleportSupernova.txt
-        │                   Radar.java
-        │                   TeleSuperNova.java
-        │
-        └───target
-            │   JavaBot.jar
-            │
-            ├───classes
-            │   │   Main.class
-            │   │
-            │   ├───Enums
-            │   │       Effects.class
-            │   │       ObjectTypes.class
-            │   │       PlayerActions.class
-            │   │
-            │   ├───Models
-            │   │       GameObject.class
-            │   │       GameState.class
-            │   │       GameStateDto.class
-            │   │       PlayerAction.class
-            │   │       Position.class
-            │   │       World.class
-            │   │
-            │   └───Services
-            │           BotService.class
-            │           GreedyCommand.class
-            │
-            ├───libs
-            │       azure-core-1.13.0.jar
-            │       gson-2.8.5.jar
-            │       jackson-annotations-2.11.3.jar
-            │       jackson-core-2.11.3.jar
-            │       jackson-databind-2.11.3.jar
-            │       jackson-dataformat-xml-2.11.3.jar
-            │       jackson-datatype-jsr310-2.11.3.jar
-            │       jackson-module-jaxb-annotations-2.11.3.jar
-            │       jakarta.activation-api-1.2.1.jar
-            │       jakarta.xml.bind-api-2.3.2.jar
-            │       netty-tcnative-boringssl-static-2.0.35.Final.jar
-            │       okhttp-3.11.0.jar
-            │       okio-1.14.0.jar
-            │       reactive-streams-1.0.2.jar
-            │       reactor-core-3.3.12.RELEASE.jar
-            │       rxjava-2.2.2.jar
-            │       signalr-1.0.0.jar
-            │       slf4j-api-1.7.25.jar
-            │       slf4j-simple-1.7.25.jar
-            │       stax2-api-4.2.1.jar
-            │       woodstox-core-6.2.1.jar
-            │
-            ├───maven-archiver
-            │       pom.properties
-            │
-            └───maven-status
-                └───maven-compiler-plugin
-                    └───compile
-                        └───default-compile
-                                createdFiles.lst
-                                inputFiles.lst
+├───src
+│   └───JavaBot
+│       │   Dockerfile
+│       │   pom.xml
+│       │
+│       ├───.github
+│       │   └───workflows
+│       │           .gitkeep
+│       │
+│       ├───src
+│       │   └───main
+│       │       └───java
+│       │           │   Main.java
+│       │           │
+│       │           ├───Enums
+│       │           │       Effects.java
+│       │           │       ObjectTypes.java
+│       │           │       PlayerActions.java
+│       │           │
+│       │           ├───Models
+│       │           │       GameObject.java
+│       │           │       GameState.java
+│       │           │       GameStateDto.java
+│       │           │       PlayerAction.java
+│       │           │       Position.java
+│       │           │       World.java
+│       │           │
+│       │           └───Services
+│       │                   BotService.java
+│       │                   GreedyCommand.java
+│       │                   Radar.java
+│       │
+│       └───target
+│           │   JavaBot.jar
+│           │
+│           ├───classes
+│           │   │   Main.class
+│           │   │
+│           │   ├───Enums
+│           │   │       Effects.class
+│           │   │       ObjectTypes.class
+│           │   │       PlayerActions.class
+│           │   │
+│           │   ├───Models
+│           │   │       GameObject.class
+│           │   │       GameState.class
+│           │   │       GameStateDto.class
+│           │   │       PlayerAction.class
+│           │   │       Position.class
+│           │   │       World.class
+│           │   │
+│           │   └───Services
+│           │           BotService.class
+│           │           GreedyCommand.class
+│           │
+│           ├───libs
+│           │       azure-core-1.13.0.jar
+│           │       gson-2.8.5.jar
+│           │       jackson-annotations-2.11.3.jar
+│           │       jackson-core-2.11.3.jar
+│           │       jackson-databind-2.11.3.jar
+│           │       jackson-dataformat-xml-2.11.3.jar
+│           │       jackson-datatype-jsr310-2.11.3.jar
+│           │       jackson-module-jaxb-annotations-2.11.3.jar
+│           │       jakarta.activation-api-1.2.1.jar
+│           │       jakarta.xml.bind-api-2.3.2.jar
+│           │       netty-tcnative-boringssl-static-2.0.35.Final.jar
+│           │       okhttp-3.11.0.jar
+│           │       okio-1.14.0.jar
+│           │       reactive-streams-1.0.2.jar
+│           │       reactor-core-3.3.12.RELEASE.jar
+│           │       rxjava-2.2.2.jar
+│           │       signalr-1.0.0.jar
+│           │       slf4j-api-1.7.25.jar
+│           │       slf4j-simple-1.7.25.jar
+│           │       stax2-api-4.2.1.jar
+│           │       woodstox-core-6.2.1.jar
+│           │
+│           ├───maven-archiver
+│           │       pom.properties
+│           │
+│           └───maven-status
+│               └───maven-compiler-plugin
+│                   └───compile
+│                       └───default-compile
+│                               createdFiles.lst
+│                               inputFiles.lst
+│
+└───target
+    │   EnteGoalKiperPalingBaikDiDunia.jar
+    │
+    ├───classes
+    │   │   Main.class
+    │   │
+    │   ├───Enums
+    │   │       Effects.class
+    │   │       ObjectTypes.class
+    │   │       PlayerActions.class
+    │   │
+    │   ├───Models
+    │   │       GameObject.class
+    │   │       GameState.class
+    │   │       GameStateDto.class
+    │   │       PlayerAction.class
+    │   │       Position.class
+    │   │       World.class
+    │   │
+    │   └───Services
+    │           BotService.class
+    │           GreedyCommand.class
+    │
+    ├───libs
+    │       azure-core-1.13.0.jar
+    │       gson-2.8.5.jar
+    │       jackson-annotations-2.11.3.jar
+    │       jackson-core-2.11.3.jar
+    │       jackson-databind-2.11.3.jar
+    │       jackson-dataformat-xml-2.11.3.jar
+    │       jackson-datatype-jsr310-2.11.3.jar
+    │       jackson-module-jaxb-annotations-2.11.3.jar
+    │       jakarta.activation-api-1.2.1.jar
+    │       jakarta.xml.bind-api-2.3.2.jar
+    │       netty-tcnative-boringssl-static-2.0.35.Final.jar
+    │       okhttp-3.11.0.jar
+    │       okio-1.14.0.jar
+    │       reactive-streams-1.0.2.jar
+    │       reactor-core-3.3.12.RELEASE.jar
+    │       rxjava-2.2.2.jar
+    │       signalr-1.0.0.jar
+    │       slf4j-api-1.7.25.jar
+    │       slf4j-simple-1.7.25.jar
+    │       stax2-api-4.2.1.jar
+    │       woodstox-core-6.2.1.jar
+    │
+    ├───maven-archiver
+    │       pom.properties
+    │
+    └───maven-status
+        └───maven-compiler-plugin
+            └───compile
+                └───default-compile
+                        createdFiles.lst
+                        inputFiles.lst
 ```
 
 <a name="project-status">
