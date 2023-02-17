@@ -4,7 +4,6 @@ reference-bot-publish
 runner-publish
 runner
 visualiser
-**/target/*
 src/JavaBot/target/classes/Enums/Effects.class
 src/JavaBot/target/classes/Models/GameObject.class
 src/JavaBot/target/classes/Enums/ObjectTypes.class
