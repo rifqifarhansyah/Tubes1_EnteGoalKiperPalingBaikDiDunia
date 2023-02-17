@@ -89,7 +89,7 @@ java -jar Tubes1_EnteGoalKiperPalingBaikDiDunia.jar
   <img src="/image/Teleport1.png/">
   <p>Figure 3. Launch Teleporter (Attack Phase)</p>
   <nl>
-  <img src="/image/Teleporter2.png/">
+  <img src="/image/Teleport2.png/">
   <p>Figure 4. Teleporter was Successfully Landed</p>
   <nl>
   <img src="/image/Shield.png/">
