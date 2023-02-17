@@ -73,7 +73,7 @@ cd target
 ```
 4. Run the java file
 ```bash
-java -jar Tubes1_EnteGoalKiperPalingBaikDiDunia.jar
+java -jar EnteGoalKiperPalingBaikDiDunia.jar
 ```
 
 <a name="screenshots"></a>
