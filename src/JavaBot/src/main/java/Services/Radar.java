@@ -100,8 +100,8 @@ public class Radar {
         double objDistance = BotService.getDistanceBetween(closeObjects.get(i), bot);
         double warningTreshold = BotService.toDegrees(Math.atan2(bot.getSize() + 10, objDistance));
         double objDegree = BotService.getHeadingBetween(closeObjects.get(i), bot);
-        boolean warningStatus = closeObjects.get(i).getCurrentHeading() > (objDegree - warningTreshold) &&
-            closeObjects.get(i).getCurrentHeading() < (objDegree + warningTreshold);
+        boolean warningStatus = (closeObjects.get(i).getCurrentHeading() > (objDegree - warningTreshold) &&
+            closeObjects.get(i).getCurrentHeading() < (objDegree + warningTreshold)) || (BotService.getDistanceBetween(closeObjects.get(i), bot) - closeObjects.get(i).getSize() - bot.getSize() < 60 && closeObjects.get(i).getGameObjectType() != ObjectTypes.TORPEDO_SALVO);
 
         if (closeObjects.get(i).getGameObjectType() == ObjectTypes.PLAYER) {
           if (closeObjects.get(i).getSize() > bot.getSize() && warningStatus) {

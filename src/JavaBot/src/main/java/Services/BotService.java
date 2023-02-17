@@ -10,10 +10,7 @@ public class BotService {
     private GameObject bot;
     public PlayerAction playerAction;
     private GameState gameState;
-    // private GameState prevState = null;
     public Integer tick = null;
-    public Integer subtick = null;
-    public UUID objectTracker = null;
     public GameObject launchedTeleport = null;
     public boolean justLaunchedTeleportStatus = false;
     public boolean switchDirection = false;
@@ -128,52 +125,39 @@ public class BotService {
                 var warning = objectRadar.checkRadar(gameState, bot);
                 // System.out.println(warning);
                 if (warning != null) {
-                    if (warning.gameObjectType == ObjectTypes.SUPERNOVA_BOMB || objectRadar.supernovaDefend) {
+                    if (warning.gameObjectType == ObjectTypes.SUPERNOVA_BOMB) {
                         // Jika muncul bahaya supernova bomb
-                        playerAction = GreedyCommand.run(warning, playerAction, objectTracker, bot, switchDirection,
+                        playerAction = GreedyCommand.run(warning, playerAction, bot, switchDirection,
                                 -90);
-                        objectTracker = warning.getId();
 
-                    } else if (warning.gameObjectType == ObjectTypes.TELEPORTER || objectRadar.teleportDefend) {
+                    } else if (warning.gameObjectType == ObjectTypes.TELEPORTER) {
                         // Jika muncul bahaya teleporter
-                        playerAction = GreedyCommand.run(warning, playerAction, objectTracker, bot, switchDirection,
+                        playerAction = GreedyCommand.run(warning, playerAction, bot, switchDirection,
                                 -90);
-                        objectTracker = warning.getId();
 
-                    } else if (warning.gameObjectType == ObjectTypes.TORPEDO_SALVO || objectRadar.torpedoDefend) {
+                    } else if (warning.gameObjectType == ObjectTypes.TORPEDO_SALVO){
                         // Jika muncul bahaya torpedo
                         if (!bot.getShieldStatus()) {
                             if (bot.getShieldCount() > 0 && bot.getSize() > 40
-                                    && getDistanceBetween(bot, warning) - bot.getSize() < 130) {
+                                    && getDistanceBetween(bot, warning) - bot.getSize() < 45) {
                                 playerAction.action = PlayerActions.ACTIVATESHIELD;
                             } else {
-                                playerAction = GreedyCommand.run(warning, playerAction, objectTracker, bot,
-                                        switchDirection, -90);
-                                objectTracker = warning.getId();
+                                playerAction = GreedyCommand.run(warning, playerAction, bot,
+                                        switchDirection, -90);;
                             }
                         }
 
                     } else if (warning.gameObjectType == ObjectTypes.PLAYER) {
                         if (launchTorpedo(bot, warning, playerAction, false, objectState)) {
-                            objectTracker = null;
                         } else {
-                            playerAction = GreedyCommand.run(warning, playerAction, objectTracker, bot, switchDirection,
+                            playerAction = GreedyCommand.run(warning, playerAction, bot, switchDirection,
                                     -60);
-                            objectTracker = warning.getId();
                         }
-                        // System.out.println(
-                        // "1. " + warning.getGameObjectType() + " heading: " +
-                        // warning.getCurrentHeading());
-                        // Jika muncul bahaya player
-                        // System.out.println(bot.getEffects());
-
-                        // System.out.println(warning.getCurrentHeading() + " "
-                        // +bot.getCurrentHeading());
 
                     } else if (closestEnemy != null
                             ? getDistanceBetween(closestEnemy, bot) - bot.getSize() - closestEnemy.getSize() < 20
                             : false) {
-                        GreedyCommand.activateAfterburner(playerAction, bot, closestEnemy, true);
+                        GreedyCommand.activateAfterburner(playerAction, bot, closestEnemy, true, 0);
                     }
 
                 } else if (!justLaunchedTeleportStatus && bot.getTeleCount() > 0 && bot.getSize() > 45
@@ -193,7 +177,6 @@ public class BotService {
                 else {
                     System.out.println("aman");
 
-                    objectTracker = null;
                     if (bot.getAfterburnerStatus()) {
                         playerAction.action = PlayerActions.STOPAFTERBURNER;
                     } else {
@@ -201,10 +184,9 @@ public class BotService {
                     }
                 }
 
-                if (objectTracker != GreedyCommand.evadeObject(bot, objectState, gameState.getWorld(), playerAction,
-                        objectTracker)) {
-                    objectTracker = GreedyCommand.evadeObject(bot, objectState, gameState.getWorld(), playerAction,
-                            objectTracker);
+                if (GreedyCommand.evadeObject(bot, objectState, gameState.getWorld(), playerAction)) {
+                    // objectTracker = GreedyCommand.evadeObject(bot, objectState, gameState.getWorld(), playerAction,
+                    //         objectTracker);
                     switchDirection = !switchDirection;
                 }
 
@@ -277,11 +259,11 @@ public class BotService {
         boolean condition2 = false;
         if (attack) {
             if (enemy.getSize() > 50) {
-                condition2 = getDistanceBetween(bot, enemy) - bot.getSize() - enemy.getSize() < 450;
+                condition2 = getDistanceBetween(bot, enemy) - bot.getSize() - enemy.getSize() < 600;
             } else if (enemy.getSize() > 80) {
                 condition2 = true;
             } else {
-                condition2 = getDistanceBetween(bot, enemy) - bot.getSize() - enemy.getSize() < 300
+                condition2 = getDistanceBetween(bot, enemy) - bot.getSize() - enemy.getSize() < 400
                         && enemy.getSize() > 20;
             }
 
