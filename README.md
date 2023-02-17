@@ -61,7 +61,7 @@ A simple Galaxio Bot with Greedy Algorithm. A greedy algorithm is a method for s
 ## Usage
 1. Clone this repository
 ```bash
-git clone https://github.com/rifqifarhansyah/Tubes1_EnteGoalKiperPalingBaikDiDunia.githttps://github.com/rifqifarhansyah/Tubes1_EnteGoalKiperPalingBaikDiDunia.git
+git clone https://github.com/rifqifarhansyah/Tubes1_EnteGoalKiperPalingBaikDiDunia.git
 ```
 2. Open the file directory
 ```bash
