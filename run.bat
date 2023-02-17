@@ -25,9 +25,11 @@ cd ../reference-bot-publish/
 timeout /t 1
 start "" dotnet ReferenceBot.dll
 timeout /t 1
-start "" dotnet ReferenceBot.dll
+cd ../target-0/
+start java -jar JavaBot.jar
 timeout /t 1
-start "" dotnet ReferenceBot.dll
+cd ../target-1/
+start java -jar JavaBot.jar
 timeout /t 1
 
 cd ../src/JavaBot/target/

@@ -141,10 +141,10 @@ public class Radar {
 
   public GameObject checkRadar(GameState gameState, GameObject bot) {
     if (gameState != null) {
-      var currSupernova = getCloseGameObjects(gameState, bot, ObjectTypes.SUPERNOVA_BOMB, 800);
-      var currTele = getCloseGameObjects(gameState, bot, ObjectTypes.TELEPORTER, 200);
-      var currTorpedo = getCloseGameObjects(gameState, bot, ObjectTypes.TORPEDO_SALVO, 280);
-      var currPlayer = getCloseGameObjects(gameState, bot, ObjectTypes.PLAYER, 200);
+      var currSupernova = getCloseGameObjects(gameState, bot, ObjectTypes.SUPERNOVA_BOMB, 1000);
+      var currTele = getCloseGameObjects(gameState, bot, ObjectTypes.TELEPORTER, 250);
+      var currTorpedo = getCloseGameObjects(gameState, bot, ObjectTypes.TORPEDO_SALVO, 500);
+      var currPlayer = getCloseGameObjects(gameState, bot, ObjectTypes.PLAYER, 230);
 
       var danger = checkObjectsNextVersion(currSupernova, bot, 40);
       if (danger != null) {

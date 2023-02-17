@@ -16,6 +16,7 @@ public class BotService {
     public UUID objectTracker = null;
     public GameObject launchedTeleport = null;
     public boolean justLaunchedTeleportStatus = false;
+    public boolean switchDirection = false;
 
     public BotService() {
         this.playerAction = new PlayerAction();
@@ -46,7 +47,7 @@ public class BotService {
         playerAction.heading = getHeadingBetween(bot, enemy);
         System.out.println("Attack with launch teleport " + "  bot size : " + bot.getSize()
                 + "    enemy size: " + enemy.getSize() + "  distance : "
-                + getDistanceBetween(bot, enemy));
+                + (getDistanceBetween(bot, enemy) - enemy.getSize() - bot.getSize()));
         // return GameObject;
     }
 
@@ -69,21 +70,24 @@ public class BotService {
             if (teleportStatus) {
                 System.out.println("test 2");
                 List<GameObject> closeEnemy = enemyList.stream()
-                        .filter(item -> getDistanceBetween(item, updateLaunceTeleport) - bot.getSize() - item.getSize() < 20
-                                && item.getId() != bot.getId())
+                        .filter(item -> getDistanceBetween(item, updateLaunceTeleport) - bot.getSize()
+                                - item.getSize() <= 5
+                                && item.getId() != bot.getId() && item.getSize() < bot.getSize())
                         .sorted(Comparator.comparing(
-                                item -> getDistanceBetween(item, updateLaunceTeleport) - bot.getSize() - item.getSize()))
+                                item -> getDistanceBetween(item, updateLaunceTeleport) - bot.getSize()
+                                        - item.getSize()))
                         .collect(Collectors.toList());
 
                 if (closeEnemy.size() > 0) {
                     System.out.println("detonate attack teleport  size " + bot.getSize() + "   enemy size :"
-                            + closeEnemy.get(0).getSize());
+                            + closeEnemy.get(0).getSize() + "    distance: "
+                            + (getDistanceBetween(updateLaunceTeleport, closeEnemy.get(0)) - bot.getSize()
+                                    - closeEnemy.get(0).getSize()));
                     p.action = PlayerActions.TELEPORT;
                     p.heading = getHeadingBetween(bot, closeEnemy.get(0));
                     return null;
                 } else {
-                    System.out.println("can't detonate, too far away");
-
+                    System.out.println("can't detonate, too far away" );
                     return updateLaunceTeleport;
                 }
             }
@@ -93,16 +97,23 @@ public class BotService {
 
     public void computeNextPlayerAction(PlayerAction playerAction) {
         var objectState = gameState.getGameObjects();
-        var playerState = gameState.getGameObjects();
+        var playerState = gameState.getPlayerGameObjects().stream().filter(item -> !item.getShieldStatus())
+                .sorted(Comparator.comparing(item -> getDistanceBetween(bot, item)))
+                .collect(Collectors.toList());
+
         var teleportState = gameState.getGameObjects().stream()
                 .filter(item -> item.getGameObjectType() == ObjectTypes.TELEPORTER)
                 .sorted(Comparator.comparing(item -> getDistanceBetween(bot, item))).collect(Collectors.toList());
 
-        List<GameObject> preyList = gameState.getPlayerGameObjects().stream()
+        List<GameObject> preyList = playerState.stream()
                 .filter(item -> item.getSize() < bot.getSize())
                 .sorted(Comparator.comparing(item -> getDistanceBetween(bot, item)))
                 .collect(Collectors.toList());
-        ;
+
+        GameObject torpedoTarget = null;
+        if (playerState.size() > 1) {
+            torpedoTarget = playerState.get(1);
+        }
         GameObject closestEnemy = null;
         if (preyList.size() > 0) {
             closestEnemy = preyList.get(0);
@@ -119,24 +130,35 @@ public class BotService {
                 if (warning != null) {
                     if (warning.gameObjectType == ObjectTypes.SUPERNOVA_BOMB || objectRadar.supernovaDefend) {
                         // Jika muncul bahaya supernova bomb
-                        playerAction = GreedyCommand.run(warning, playerAction, objectTracker, bot);
+                        playerAction = GreedyCommand.run(warning, playerAction, objectTracker, bot, switchDirection,
+                                -90);
                         objectTracker = warning.getId();
 
                     } else if (warning.gameObjectType == ObjectTypes.TELEPORTER || objectRadar.teleportDefend) {
                         // Jika muncul bahaya teleporter
-                        playerAction = GreedyCommand.run(warning, playerAction, objectTracker, bot);
+                        playerAction = GreedyCommand.run(warning, playerAction, objectTracker, bot, switchDirection,
+                                -90);
                         objectTracker = warning.getId();
 
                     } else if (warning.gameObjectType == ObjectTypes.TORPEDO_SALVO || objectRadar.torpedoDefend) {
                         // Jika muncul bahaya torpedo
-                        playerAction = GreedyCommand.run(warning, playerAction, objectTracker, bot);
-                        objectTracker = warning.getId();
+                        if (!bot.getShieldStatus()) {
+                            if (bot.getShieldCount() > 0 && bot.getSize() > 40
+                                    && getDistanceBetween(bot, warning) - bot.getSize() < 130) {
+                                playerAction.action = PlayerActions.ACTIVATESHIELD;
+                            } else {
+                                playerAction = GreedyCommand.run(warning, playerAction, objectTracker, bot,
+                                        switchDirection, -90);
+                                objectTracker = warning.getId();
+                            }
+                        }
 
                     } else if (warning.gameObjectType == ObjectTypes.PLAYER) {
-                        if (launchTorpedo(bot, warning, 150, playerAction, false)) {
+                        if (launchTorpedo(bot, warning, playerAction, false, objectState)) {
                             objectTracker = null;
                         } else {
-                            playerAction = GreedyCommand.run(warning, playerAction, objectTracker, bot);
+                            playerAction = GreedyCommand.run(warning, playerAction, objectTracker, bot, switchDirection,
+                                    -60);
                             objectTracker = warning.getId();
                         }
                         // System.out.println(
@@ -154,16 +176,16 @@ public class BotService {
                         GreedyCommand.activateAfterburner(playerAction, bot, closestEnemy, true);
                     }
 
-                } else if (!justLaunchedTeleportStatus && bot.getTeleCount() > 0 && bot.getSize() > 60
+                } else if (!justLaunchedTeleportStatus && bot.getTeleCount() > 0 && bot.getSize() > 45
                         && (closestEnemy != null
                                 ? bot.getSize() - closestEnemy.getSize() > 30
                                 : false)
-                        && launchedTeleport == null) {
+                        && launchedTeleport == null
+                        && getDistanceBetween(bot, closestEnemy) - bot.getSize() - closestEnemy.getSize() > 50) {
                     teleportSerang(playerAction, closestEnemy);
                     justLaunchedTeleportStatus = true;
 
-                } else if (launchTorpedo(bot, closestEnemy,
-                        closestEnemy != null ? (closestEnemy.getSize() > 60 ? 400 : 200) : 200, playerAction, true)) {
+                } else if (launchTorpedo(bot, torpedoTarget, playerAction, true, objectState)) {
 
                 }
 
@@ -178,15 +200,22 @@ public class BotService {
                         GreedyCommand.catchFood(gameState.getGameObjects(), bot, playerAction);
                     }
                 }
-                objectTracker = GreedyCommand.evadeObject(bot, objectState, gameState.getWorld(), playerAction,
-                        objectTracker);
+
+                if (objectTracker != GreedyCommand.evadeObject(bot, objectState, gameState.getWorld(), playerAction,
+                        objectTracker)) {
+                    objectTracker = GreedyCommand.evadeObject(bot, objectState, gameState.getWorld(), playerAction,
+                            objectTracker);
+                    switchDirection = !switchDirection;
+                }
+
                 if (justLaunchedTeleportStatus && teleportState.size() > 0
                         && playerAction.action != PlayerActions.FIRETELEPORT) {
                     launchedTeleport = teleportState.get(0);
                     justLaunchedTeleportStatus = false;
                 }
                 launchedTeleport = checkTeleportSerang(playerAction, bot, launchedTeleport, preyList, teleportState);
-                System.out.println(launchedTeleport);
+                System.out.println("launched teleport:  " + launchedTeleport + "     just launched teleport: "
+                        + justLaunchedTeleportStatus);
                 // if (headingTele != -1) {
                 // headingTele = checkTeleportSerang(playerAction, headingTele, preyTracker,
                 // playerState);
@@ -239,22 +268,44 @@ public class BotService {
         return (int) (v * (180 / Math.PI));
     }
 
-    public boolean launchTorpedo(GameObject bot, GameObject enemy, int distanceTreshold, PlayerAction p,
-            boolean attack) {
-        boolean condition1 = bot.getSize() > (attack ? 35 : 20);
+    public boolean launchTorpedo(GameObject bot, GameObject enemy, PlayerAction p,
+            boolean attack, List<GameObject> ObjList) {
+        if (enemy == null) {
+            return false;
+        }
+        boolean condition1 = bot.getSize() > (attack ? 20 : 15);
         boolean condition2 = false;
-
         if (attack) {
-            condition2 = enemy != null
-                    ? getDistanceBetween(bot, enemy) - bot.getSize() - enemy.getSize() < distanceTreshold
-                            && enemy.getSize() > 20
-                    : false;
+            if (enemy.getSize() > 50) {
+                condition2 = getDistanceBetween(bot, enemy) - bot.getSize() - enemy.getSize() < 450;
+            } else if (enemy.getSize() > 80) {
+                condition2 = true;
+            } else {
+                condition2 = getDistanceBetween(bot, enemy) - bot.getSize() - enemy.getSize() < 300
+                        && enemy.getSize() > 20;
+            }
+
         } else {
-            condition2 = getDistanceBetween(bot, enemy) - bot.getSize() - enemy.getSize() > distanceTreshold;
+            condition2 = getDistanceBetween(bot, enemy) - bot.getSize() - enemy.getSize() > 150;
         }
 
         boolean condition3 = bot.getTorpedoCount() > 0;
-        boolean condition = condition1 && condition2 && condition3;
+
+        int heading = getHeadingBetween(bot, enemy);
+        List<GameObject> obstructObjList = ObjList.stream().filter(item -> getHeadingBetween(bot, item)
+                + toDegrees(Math.atan2(item.getSize(), getDistanceBetween(bot, item))) > heading
+                && getHeadingBetween(bot, item)
+                        - toDegrees(Math.atan2(item.getSize(), getDistanceBetween(bot, item))) < heading
+                && getDistanceBetween(bot, item) < getDistanceBetween(bot, enemy) &&
+                (item.getGameObjectType() == ObjectTypes.ASTEROID_FIELD
+                        || item.getGameObjectType() == ObjectTypes.GAS_CLOUD
+                                && item.getGameObjectType() == ObjectTypes.WORMHOLE))
+                .collect(Collectors.toList());
+        boolean condition4 = obstructObjList.size() < 2;
+
+        boolean condition = condition1 && condition2 && condition3 && condition4;
+
+        System.out.println("heading clear  (condition4): " + condition4 + "  obstruction count: " + obstructObjList.size());
 
         if (condition) {
             System.out
