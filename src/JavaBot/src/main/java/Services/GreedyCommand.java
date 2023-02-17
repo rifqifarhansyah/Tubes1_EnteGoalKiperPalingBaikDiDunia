@@ -130,13 +130,8 @@ public class GreedyCommand extends BotService {
         || p.action == PlayerActions.FIRESUPERNOVA) {
       return false;
     }
-    // objectTracker = checkHarmfulObject(bot, gameObj, p,
-    // ObjectTypes.ASTEROID_FIELD, 10, "evade asteroid field",
-    // objectTracker);
     boolean status = false;
     status = checkHarmfulObject(bot, gameObj, p, ObjectTypes.GAS_CLOUD,40, "evade gas cloud");
-    // objectTracker = checkHarmfulObject(bot, gameObj, p, ObjectTypes.WORMHOLE, 20,
-    // "evade wormhole", objectTracker);
     if (status) {
       return status;
     }
@@ -166,37 +161,5 @@ public class GreedyCommand extends BotService {
     }
 
   }
-
-  // public static boolean launchTorpedo(GameObject bot, GameObject enemy, int
-  // distanceTreshold, PlayerAction p,
-  // boolean attack) {
-  // boolean condition1 = bot.getSize() > 35;
-  // boolean condition2 = false;
-
-  // if (!attack) {
-  // condition2 = enemy != null ? getDistanceBetween(bot, enemy) - bot.getSize() -
-  // enemy.getSize() < distanceTreshold
-  // : false;
-  // } else {
-  // condition2 = getDistanceBetween(bot, enemy) - bot.getSize() - enemy.getSize()
-  // > distanceTreshold;
-  // }
-
-  // boolean condition3 = bot.getTorpedoCount() > 0;
-  // boolean condition = condition1 && condition2 && condition3;
-
-  // if (condition) {
-  // System.out.println((attack ? "Attack with torpedo" : "Defend with torpedo") +
-  // " bot size : " + bot.getSize()
-  // + " enemy size: "
-  // + enemy.getSize() + " distance : "
-  // + (getDistanceBetween(bot, enemy) - bot.getSize() - enemy.getSize()) + "
-  // heading: "
-  // + getHeadingBetween(bot, enemy));
-  // p.action = PlayerActions.FIRETORPEDOES;
-  // p.heading = getHeadingBetween(bot, enemy);
-  // }
-  // return condition;
-  // }
 
 }

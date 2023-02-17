@@ -2,7 +2,6 @@ Enums\Effects.class
 Enums\ObjectTypes.class
 Models\PlayerAction.class
 Models\GameObject.class
-Services\TeleSuperNova.class
 Main.class
 Services\Radar.class
 Enums\PlayerActions.class
